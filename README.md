@@ -24,6 +24,7 @@ Prebuilt as a `.deb` for Debian/Ubuntu-based distributions:
 
 ```sh
 sudo dpkg -i protonbackup_0.4.5_amd64.deb
+sudo apt install ./protonbackup_0.4.5_amd64.deb
 ```
 
 Everything needed is bundled — no separate runtime to install first.
