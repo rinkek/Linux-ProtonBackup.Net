@@ -7,14 +7,14 @@
 
     <UserControl.Styles>
         <Style Selector="Border.step">
-            <Setter Property="Padding" Value="16" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="22" />
+            <Setter Property="CornerRadius" Value="16" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#DEDBEE" />
         </Style>
         <Style Selector="TextBlock.done">
-            <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+            <Setter Property="Foreground" Value="#1B6B35" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
     </UserControl.Styles>
@@ -26,7 +26,7 @@
             <TextBlock TextWrapping="Wrap" Opacity="0.75"
                        Text="Four steps and your backup is running. Files are only copied to Proton Drive; nothing is ever deleted there." />
 
-            <ui:FAInfoBar IsOpen="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}"
+            <ui:FAInfoBar IsVisible="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}" IsOpen="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}"
                           Message="{Binding Message}" Severity="Informational" IsClosable="True" />
 
             <Border Classes="step">
@@ -49,10 +49,10 @@
                     <TextBlock Text="Signed in." Classes="done" IsVisible="{Binding IsLoggedIn}" />
                     <StackPanel Spacing="10" IsVisible="{Binding !IsLoggedIn}">
                         <TextBlock TextWrapping="Wrap" Opacity="0.75"
-                                   Text="Signing in happens in your browser. The app stores no password; the session goes into your desktop keyring." />
+                                   Text="Signing in happens in your browser. The app stores no password; the session goes into your desktop keyring. If the CLI is not there yet, it is downloaded first." />
                         <Button Content="Sign in to Proton" Classes="accent"
                                 Command="{Binding LoginCommand}"
-                                IsEnabled="{Binding HasCli}" HorizontalAlignment="Left" />
+                                IsEnabled="{Binding !Busy}" HorizontalAlignment="Left" />
                     </StackPanel>
                 </StackPanel>
             </Border>

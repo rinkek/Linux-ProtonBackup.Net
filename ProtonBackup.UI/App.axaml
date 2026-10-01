@@ -3,13 +3,70 @@
              xmlns:sty="using:FluentAvalonia.Styling"
              x:Class="ProtonBackup.UI.App"
              xmlns:local="using:ProtonBackup.UI"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Light">
 
     <Application.DataTemplates>
         <local:ViewLocator />
     </Application.DataTemplates>
 
+    <Application.Resources>
+        <!-- One base size for the whole app: 17 px, nothing below 16 px. -->
+        <x:Double x:Key="ControlContentThemeFontSize">17</x:Double>
+    </Application.Resources>
+
     <Application.Styles>
-        <sty:FluentAvaloniaTheme PreferSystemTheme="True" CustomAccentColor="#6D4BFF" />
+        <sty:FluentAvaloniaTheme PreferSystemTheme="False" CustomAccentColor="#6D4BFF" />
+
+        <!-- Closer to Proton's own look: 8 px corners, 44 px high controls, regular-weight button text. -->
+        <Style Selector="Button">
+            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="Padding" Value="22,8" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="FontWeight" Value="Normal" />
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <!-- A disabled button must be visibly different from an enabled one, yet its text stays readable. -->
+        <Style Selector="Button.accent:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#D6CFFF" />
+            <Setter Property="Foreground" Value="#4A3E82" />
+        </Style>
+        <!-- Proton purple exactly, not the shade FluentAvalonia derives from it. -->
+        <Style Selector="Button.accent /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#6D4BFF" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#5A3BEA" />
+        </Style>
+        <Style Selector="Button.plain /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#E4E2EE" />
+            <Setter Property="Foreground" Value="#1C1A24" />
+        </Style>
+        <Style Selector="Button.plain:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#D8D5E8" />
+        </Style>
+        <Style Selector="Button.plain:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#F1F0F6" />
+            <Setter Property="Foreground" Value="#8A879C" />
+        </Style>
+        <!-- Lists and the tree sit on white, framed, on the lavender page. -->
+        <Style Selector="ListBox, TreeView">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#DEDBEE" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="4" />
+        </Style>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#DEDBEE" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Padding" Value="22" />
+        </Style>
     </Application.Styles>
 </Application>

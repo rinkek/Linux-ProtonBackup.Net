@@ -66,6 +66,30 @@ public sealed class BackupService : IDisposable
     public Task<CliResult> LogoutAsync(CancellationToken token = default) =>
         Cli is { } cli ? cli.RunAsync(["auth", "logout"], token) : Task.FromResult(new CliResult(1, "", "CLI not found"));
 
+    /// One click from a fresh install: the CLI is not in the package, so signing in fetches it first when it is
+    /// missing, with no detour through another page.
+    public async Task<(bool Success, string Message)> SignInAsync(Action<string> status, CancellationToken token = default)
+    {
+        if (CliPath is null)
+        {
+            status("The Proton Drive CLI is not installed yet; downloading it first...");
+            var release = await Installer.FetchReleaseAsync(token);
+            if (release is null) return (false, "The version page could not be read.");
+            var outcome = await Installer.InstallAsync(release, token: token);
+            RefreshCliPath();
+            if (!outcome.Success) return (false, outcome.Message);
+            if (CliPath is null) return (false, "The CLI was installed, but could not be found afterwards.");
+        }
+
+        status("Your browser will open; finish signing in there.");
+        var result = await LoginAsync(token);
+        return result.Ok ? (true, "Signed in.") : (false, result.Output.Trim());
+    }
+
+    /// Removes everything the app put in the home folder and signs out. The database is closed first, so
+    /// afterwards this service is unusable: the caller must stop using it.
+    public Task<IReadOnlyList<CleanupStep>> RemoveEverythingAsync() => Cleanup.RunAsync(quiesce: Database.Dispose);
+
     public void Dispose()
     {
         Database.Dispose();

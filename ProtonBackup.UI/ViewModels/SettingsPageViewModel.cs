@@ -20,68 +20,71 @@ public partial class SettingsPageViewModel(BackupService service) : PageViewMode
     [ObservableProperty] private bool _busy;
     [ObservableProperty] private bool _confirmCleanup;
     [ObservableProperty] private string? _message;
+    /// True while the CLI reports a working session: signing in again would do nothing, so the button is disabled.
+    [ObservableProperty] private bool _signedIn;
 
+    private bool _formLoaded;
+
+    /// Raised when the removal starts (polling must stop for good) and with the steps when it is over.
+    public event EventHandler? RemovalStarted;
+    public event EventHandler<IReadOnlyList<CleanupStep>>? RemovalFinished;
+    /// Raised after a sign-in, sign-out or CLI install, so the rest of the window re-reads the session at once.
+    public event EventHandler? AccountChanged;
+
+    /// The form is loaded once when the page is first shown, and again after something was saved, not on every
+    /// two-second tick: reloading it each tick threw away whatever the user was typing.
     public override Task RefreshAsync()
     {
-        if (int.TryParse(Service.Database.GetSetting("interval_minutes"), out var minutes) && minutes != IntervalMinutes)
-            IntervalMinutes = minutes;
         CliPath = Service.CliPath ?? "";
+        if (!_formLoaded) LoadForm(includingInterval: true);
+        return Task.CompletedTask;
+    }
+
+    private void LoadForm(bool includingInterval)
+    {
+        if (includingInterval && int.TryParse(Service.Database.GetSetting("interval_minutes"), out var minutes) && minutes >= 1)
+            IntervalMinutes = minutes;
         VersionPageUrl = Service.CliSettings.VersionPageUrl;
         DownloadTemplate = Service.CliSettings.DownloadTemplate;
         Platform = Service.CliSettings.Platform;
         SkipChecksum = Service.CliSettings.SkipChecksum;
-        return Task.CompletedTask;
+        _formLoaded = true;
     }
 
-    public async Task RefreshSessionAsync() =>
-        SessionText = await Service.GetSessionAsync() switch
+    public async Task RefreshSessionAsync()
+    {
+        var state = await Service.GetSessionAsync();
+        SignedIn = state == SessionState.Active;
+        SessionText = state switch
         {
             SessionState.Active => "signed in",
             SessionState.Expired => "session expired",
             _ => "unknown",
         };
+    }
 
     /// Sign in is the very first thing shown on this page, with no earlier point
     /// where a first-time user would have had a reason to visit the CLI's own
     /// Update button - so a missing CLI is fetched here instead of just reporting
     /// "CLI not found", found confusing by actually using the app.
-    [RelayCommand]
+    /// Sign in is the very first thing shown on this page, so a missing CLI is fetched here instead of just
+    /// reporting "CLI not found": one click from a fresh install.
+    [RelayCommand(CanExecute = nameof(CanSignIn))]
     private async Task LoginAsync()
     {
         Busy = true;
-        if (Service.CliPath is null)
-        {
-            Message = "The Proton Drive CLI is not installed yet; downloading it first...";
-            var release = await Service.Installer.FetchReleaseAsync();
-            if (release is null)
-            {
-                Message = "The version page could not be read.";
-                Busy = false;
-                return;
-            }
-            var outcome = await Service.Installer.InstallAsync(release);
-            Service.RefreshCliPath();
-            if (!outcome.Success)
-            {
-                Message = outcome.Message;
-                Busy = false;
-                return;
-            }
-            if (Service.CliPath is null)
-            {
-                Message = "The CLI was installed, but could not be found afterwards.";
-                Busy = false;
-                return;
-            }
-            await RefreshAsync();
-        }
-
-        Message = "Your browser will open; finish signing in there.";
-        var result = await Service.LoginAsync();
-        Message = result.Ok ? "Signed in." : result.Output.Trim();
+        var outcome = await Service.SignInAsync(text => Message = text);
+        Message = outcome.Message;
+        CliPath = Service.CliPath ?? "";
         Busy = false;
         await RefreshSessionAsync();
+        AccountChanged?.Invoke(this, EventArgs.Empty);
     }
+
+    private bool CanSignIn() => !SignedIn && !Busy;
+
+    partial void OnSignedInChanged(bool value) => LoginCommand.NotifyCanExecuteChanged();
+    partial void OnBusyChanged(bool value) => LoginCommand.NotifyCanExecuteChanged();
 
     [RelayCommand]
     private async Task LogoutAsync()
@@ -91,6 +94,7 @@ public partial class SettingsPageViewModel(BackupService service) : PageViewMode
         Message = result.Ok ? "Signed out." : result.Output.Trim();
         Busy = false;
         await RefreshSessionAsync();
+        AccountChanged?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]
@@ -121,7 +125,7 @@ public partial class SettingsPageViewModel(BackupService service) : PageViewMode
         Service.CliSettings.Platform = Platform;
         Service.CliSettings.SkipChecksum = SkipChecksum;
         Message = "CLI settings saved.";
-        await RefreshAsync();
+        LoadForm(includingInterval: false);
     }
 
     [RelayCommand]
@@ -153,8 +157,10 @@ public partial class SettingsPageViewModel(BackupService service) : PageViewMode
         var outcome = await Service.Installer.InstallAsync(release);
         Message = outcome.Message;
         Service.RefreshCliPath();
+        CliPath = Service.CliPath ?? "";
         Busy = false;
-        await RefreshAsync();
+        LoadForm(includingInterval: false);
+        AccountChanged?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]
@@ -162,7 +168,9 @@ public partial class SettingsPageViewModel(BackupService service) : PageViewMode
     {
         Message = Service.Installer.Rollback().Message;
         Service.RefreshCliPath();
-        await RefreshAsync();
+        CliPath = Service.CliPath ?? "";
+        AccountChanged?.Invoke(this, EventArgs.Empty);
+        await Task.CompletedTask;
     }
 
     /// A package should not land in your home folder, so cleanup happens here.
@@ -177,14 +185,12 @@ public partial class SettingsPageViewModel(BackupService service) : PageViewMode
             return;
         }
 
-        Busy = true;
-        var steps = await Cleanup.RunAsync();
-        var failed = steps.Where(step => !step.Succeeded).ToList();
-        Message = failed.Count == 0
-            ? "Cleaned up. Remove the package with: sudo apt remove protonbackup"
-            : "Partly cleaned up: " + string.Join("; ", failed.Select(step => step.Description));
         ConfirmCleanup = false;
+        Busy = true;
+        RemovalStarted?.Invoke(this, EventArgs.Empty);
+        var steps = await Service.RemoveEverythingAsync();
         Busy = false;
+        RemovalFinished?.Invoke(this, steps);
     }
 
     [RelayCommand]
@@ -193,6 +199,8 @@ public partial class SettingsPageViewModel(BackupService service) : PageViewMode
         IntervalMinutes = (int)SystemdManager.DefaultInterval.TotalMinutes;
         Service.CliSettings.RestoreDefaults();
         Message = "Defaults restored; apply the interval with Save interval.";
-        await RefreshAsync();
+        // The interval just set to the default is not stored yet and must stay.
+        LoadForm(includingInterval: false);
+        await Task.CompletedTask;
     }
 }

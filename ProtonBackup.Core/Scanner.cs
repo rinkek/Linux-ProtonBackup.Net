@@ -22,6 +22,8 @@ public sealed class Scanner
 
         foreach (var path in Directory.EnumerateFiles(fullRoot, "*", options))
         {
+            if (!NativeFile.IsRegularFile(path)) continue;
+
             var info = new FileInfo(path);
             var modified = new DateTimeOffset(info.LastWriteTimeUtc, TimeSpan.Zero);
             if (modified > cutoff) continue;

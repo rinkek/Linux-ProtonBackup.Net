@@ -7,8 +7,9 @@
         x:DataType="vm:MainWindowViewModel"
         Title="Proton Drive backup"
         Icon="avares://protonbackup-ui/Assets/protonbackup.png"
-        Width="960" Height="660"
-        MinWidth="720" MinHeight="460">
+        Width="1180" Height="800"
+        MinWidth="860" MinHeight="540"
+        FontSize="17">
 
     <Window.Styles>
         <Style Selector="ListBox.nav">
@@ -18,13 +19,23 @@
             <Setter Property="Padding" Value="14,11" />
             <Setter Property="Margin" Value="8,2" />
             <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Foreground" Value="#D9D6F0" />
+            <Setter Property="Foreground" Value="#E3DFF5" />
         </Style>
         <Style Selector="ListBox.nav ListBoxItem:selected">
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Background" Value="#3B2E78" />
             <Setter Property="BorderBrush" Value="#4A3E82" />
             <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem /template/ Border#SelectionIndicator">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#3B2E78" />
+            <Setter Property="BorderBrush" Value="#5B4CA0" />
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:pointerover:not(:selected) /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#2A2153" />
         </Style>
         <Style Selector="ListBox.nav ListBoxItem:selected TextBlock">
             <Setter Property="Foreground" Value="White" />
@@ -47,7 +58,7 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="Button.navIcon PathIcon">
-            <Setter Property="Foreground" Value="#D9D6F0" />
+            <Setter Property="Foreground" Value="#E3DFF5" />
         </Style>
         <Style Selector="Button.navIcon:pointerover:not(.selected) /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="#2A2153" />
@@ -62,19 +73,24 @@
         </Style>
     </Window.Styles>
 
-    <Panel>
+    <Panel Background="#F4F1FF">
     <views:WelcomePageView DataContext="{Binding Welcome}" Margin="32,16"
                            IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ShowWelcome}" />
 
-    <Grid ColumnDefinitions="220,*"
-          IsVisible="{Binding !ShowWelcome}">
+    <Grid ColumnDefinitions="260,*">
+        <Grid.IsVisible>
+            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                <Binding Path="!ShowWelcome" />
+                <Binding Path="NotRemoving" />
+            </MultiBinding>
+        </Grid.IsVisible>
         <Border Grid.Column="0" Background="#211A42">
             <Grid RowDefinitions="Auto,*,Auto,Auto">
                 <StackPanel Grid.Row="0" Margin="20,24,20,22" Orientation="Horizontal" Spacing="10">
                     <Image Source="avares://protonbackup-ui/Assets/protonbackup.png" Width="30" Height="30" />
                     <StackPanel VerticalAlignment="Center" Spacing="0">
-                        <TextBlock Text="Proton Drive" FontSize="15" FontWeight="Bold" Foreground="White" />
-                        <TextBlock Text="backup" FontSize="12" Foreground="#9C94C7" />
+                        <TextBlock Text="Proton Drive" FontSize="21" FontWeight="Bold" Foreground="White" />
+                        <TextBlock Text="backup" FontSize="16" Foreground="#C9C3E8" />
                     </StackPanel>
                 </StackPanel>
 
@@ -102,23 +118,35 @@
                 </StackPanel>
 
                 <StackPanel Grid.Row="3" Margin="20,4,20,20" Spacing="6">
-                    <TextBlock Text="{Binding Status.SessionText}" Foreground="#B6AEDA" FontSize="12" />
-                    <TextBlock Text="{Binding Status.LastRun}" Foreground="#786FA0" FontSize="11" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Status.SessionText}" Foreground="#E3DFF5" FontSize="16" />
+                    <TextBlock Text="{Binding Status.LastRun}" Foreground="#C9C3E8" FontSize="16" TextWrapping="Wrap" />
                 </StackPanel>
             </Grid>
         </Border>
 
-        <Grid Grid.Column="1" RowDefinitions="Auto,*" Background="White">
-            <ui:FAInfoBar Grid.Row="0"
+        <Grid Grid.Column="1" RowDefinitions="Auto,*" Background="#F4F1FF">
+            <ui:FAInfoBar Grid.Row="0" IsVisible="{Binding CliMissing}"
                           Margin="24,18,24,0"
                           IsOpen="{Binding CliMissing}"
                           Severity="Warning"
                           IsClosable="False"
-                          Title="The proton-drive CLI was not found"
-                          Message="Put it in ~/.local/share/ProtonBackup/bin or on your PATH." />
+                          Title="The Proton Drive CLI is not installed yet"
+                          Message="It is downloaded when you sign in (Settings, or the welcome steps), or put it in ~/.local/share/ProtonBackup/bin or on your PATH." />
 
             <ContentControl Grid.Row="1" Content="{Binding SelectedPage}" Margin="28,22,28,24" />
         </Grid>
     </Grid>
+
+    <!-- The end screen of "Remove and clean up": the app stops polling, shows the steps and is quit by the user. -->
+    <Border IsVisible="{Binding Removing}" Background="#F4F1FF" Padding="48">
+        <StackPanel MaxWidth="760" Spacing="18" VerticalAlignment="Center">
+            <TextBlock Text="Removal" FontSize="32" FontWeight="Bold" Foreground="#1C1A24" />
+            <Border Background="White" CornerRadius="16" Padding="22" BorderBrush="#DEDBEE" BorderThickness="1">
+                <TextBlock Text="{Binding RemovalText}" TextWrapping="Wrap" Foreground="#1C1A24" />
+            </Border>
+            <Button Content="Quit" HorizontalAlignment="Left" Click="OnQuitClicked"
+                    IsEnabled="{Binding RemovalFinished}" />
+        </StackPanel>
+    </Border>
     </Panel>
 </Window>

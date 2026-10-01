@@ -28,6 +28,16 @@ public partial class SourceFoldersPageViewModel(BackupService service, IFolderPi
         return Task.CompletedTask;
     }
 
+    /// Why a destination cannot be used, or null. "/" is refused: trimmed it would be an empty destination.
+    internal static string? DestinationProblem(string? destination)
+    {
+        if (string.IsNullOrWhiteSpace(destination) || !destination.StartsWith('/'))
+            return "The destination path must start with /, for example /my-files/Backup.";
+        if (destination.TrimEnd('/').Length == 0)
+            return "The destination must be a folder below /";
+        return null;
+    }
+
     [RelayCommand]
     private async Task BrowseAsync()
     {
@@ -43,9 +53,9 @@ public partial class SourceFoldersPageViewModel(BackupService service, IFolderPi
             Message = "Choose an existing folder first.";
             return;
         }
-        if (string.IsNullOrWhiteSpace(NewRemotePath) || !NewRemotePath.StartsWith('/'))
+        if (DestinationProblem(NewRemotePath) is { } problem)
         {
-            Message = "The destination path must start with /, for example /my-files/Backup.";
+            Message = problem;
             return;
         }
 

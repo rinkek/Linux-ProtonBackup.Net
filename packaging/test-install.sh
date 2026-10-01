@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installeert en verwijdert het pakket in een schone container; de poort van fase 6.
+# Installs and removes the package in a clean container.
 set -euo pipefail
 cat <<'INNER' > /tmp/inner.sh
 set -e

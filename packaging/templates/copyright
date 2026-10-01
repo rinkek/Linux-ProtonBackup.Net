@@ -1,6 +1,13 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: protonbackup
+Upstream-Contact: Rinke Kleijer <rkl_shop@hotmail.com>
+
 Files: *
 Copyright: 2026 Rinke Kleijer
-License: eigen gebruik
- Dit pakket is voor eigen gebruik gemaakt en niet voor distributie bedoeld.
- De Proton Drive CLI zit er bewust niet in; de app haalt die zelf op.
+License: personal-use
+ This package was made for personal use and is not meant for distribution.
+ The Proton Drive CLI is deliberately not part of it; the app downloads it itself.
+ .
+ The package also contains the .NET runtime (MIT), Avalonia (MIT), FluentAvalonia (MIT), SkiaSharp (MIT),
+ HarfBuzzSharp (MIT), CommunityToolkit.Mvvm (MIT) and SQLite (public domain) with Microsoft.Data.Sqlite
+ (MIT), each under the licence of its own project.

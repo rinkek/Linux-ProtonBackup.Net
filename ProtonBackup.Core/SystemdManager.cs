@@ -1,6 +1,8 @@
+using System.Text.RegularExpressions;
+
 namespace ProtonBackup.Core;
 
-public sealed class SystemdManager(string? executablePath = null)
+public sealed partial class SystemdManager(string? executablePath = null)
 {
     public const string ServiceName = "protonbackup-sync.service";
     public const string TimerName = "protonbackup-sync.timer";
@@ -21,27 +23,27 @@ public sealed class SystemdManager(string? executablePath = null)
 
         await File.WriteAllTextAsync(Path.Combine(UnitDirectory, ServiceName), $"""
             [Unit]
-            Description=Proton Drive backup, een syncronde
+            Description=Proton Drive backup, a sync run
 
             [Service]
             Type=oneshot
-            ExecStart={_executable} --run-once
+            ExecStart={ExecStartCommand(_executable)} --run-once
 
             """, token);
 
         await File.WriteAllTextAsync(Path.Combine(UnitDirectory, SourceServiceTemplate), $"""
             [Unit]
-            Description=Proton Drive backup, een syncronde voor bron %i
+            Description=Proton Drive backup, a sync run for source %i
 
             [Service]
             Type=oneshot
-            ExecStart={_executable} --run-once --source %i
+            ExecStart={ExecStartCommand(_executable)} --run-once --source %i
 
             """, token);
 
         await File.WriteAllTextAsync(Path.Combine(UnitDirectory, TimerName), $"""
             [Unit]
-            Description=Proton Drive backup op een interval
+            Description=Proton Drive backup on an interval
 
             [Timer]
             OnActiveSec={FormatInterval(StartupDelay)}
@@ -106,6 +108,45 @@ public sealed class SystemdManager(string? executablePath = null)
     private static Task<CliResult> Systemctl(IEnumerable<string> arguments, CancellationToken token) =>
         ProcessRunner.RunAsync("systemctl", new[] { "--user" }.Concat(arguments), token);
 
-    private static string FormatInterval(TimeSpan interval) =>
-        interval.TotalMinutes >= 1 ? $"{(int)interval.TotalMinutes}min" : $"{(int)interval.TotalSeconds}s";
+    /// Whole minutes as Nmin, anything else in seconds (90 s must not silently become 1min).
+    internal static string FormatInterval(TimeSpan interval)
+    {
+        var seconds = (long)interval.TotalSeconds;
+        return seconds >= 60 && seconds % 60 == 0 ? $"{seconds / 60}min" : $"{seconds}s";
+    }
+
+    /// The program path as ExecStart wants it: a % would start a systemd specifier and whitespace
+    /// would split the path into arguments.
+    internal static string ExecStartCommand(string path)
+    {
+        var escaped = path.Replace("%", "%%");
+        if (!escaped.Any(c => char.IsWhiteSpace(c) || c is '"' or '\\' or '\''))
+            return escaped;
+        return "\"" + escaped.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+    }
+
+    /// When the timer fires next, as systemd prints it (for example Thu 2026-10-01 08:47:17 CEST), or null.
+    public async Task<string?> NextRunAsync(CancellationToken token = default) =>
+        ParseNextRun(await DescribeTimerAsync(token), TimerName);
+
+    /// The NEXT column of systemctl list-timers. The table pads columns with a single space when a column
+    /// is as wide as its widest cell, so splitting on double spaces can return several columns glued
+    /// together; the timestamp itself is matched instead.
+    internal static string? ParseNextRun(string listTimersOutput, string timerName)
+    {
+        foreach (var line in listTimersOutput.Split('\n'))
+        {
+            if (!line.Contains(timerName)) continue;
+            var trimmed = line.Trim();
+            if (trimmed.StartsWith('-')) return null; // "n/a": the timer is not scheduled
+            var match = NextRunPattern().Match(trimmed);
+            if (match.Success) return match.Value;
+            var first = Regex.Split(trimmed, @"\s{2,}")[0];
+            return first.Length > 0 && first != "-" ? first : null;
+        }
+        return null;
+    }
+
+    [GeneratedRegex(@"^\S+ \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?: [A-Za-z0-9+:-]+)?")]
+    private static partial Regex NextRunPattern();
 }

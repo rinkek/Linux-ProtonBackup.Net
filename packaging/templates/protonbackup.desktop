@@ -9,3 +9,4 @@ Terminal=false
 Categories=Utility;Archiving;
 Keywords=backup;proton;drive;sync;
 StartupNotify=true
+StartupWMClass=protonbackup-ui

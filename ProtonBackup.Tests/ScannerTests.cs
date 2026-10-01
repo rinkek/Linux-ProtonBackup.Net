@@ -38,4 +38,21 @@ public class ScannerTests
         }
         finally { directory.Delete(recursive: true); }
     }
+
+    [Fact]
+    public void OnlyRegularFilesAreListed()
+    {
+        var directory = Directory.CreateTempSubdirectory();
+        try
+        {
+            System.IO.File.WriteAllText(Path.Combine(directory.FullName, "gewoon.txt"), "inhoud");
+            var pipe = Path.Combine(directory.FullName, "pijp");
+            using (var mkfifo = System.Diagnostics.Process.Start("mkfifo", pipe)) mkfifo.WaitForExit();
+            Assert.True(System.IO.File.Exists(pipe));
+
+            var listed = new Scanner { SettleTime = TimeSpan.Zero }.Scan(directory.FullName).ToList();
+            Assert.Equal("gewoon.txt", Assert.Single(listed).RelativePath);
+        }
+        finally { directory.Delete(recursive: true); }
+    }
 }

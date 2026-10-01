@@ -28,6 +28,13 @@ public partial class WelcomePageViewModel(BackupService service, IFolderPicker f
         HasCli = service.CliPath is not null;
         HasSource = service.Database.GetSources().Count > 0;
         TimerEnabled = await service.Systemd.IsTimerEnabledAsync();
+        if (!HasCli) IsLoggedIn = false;
+        OnPropertyChanged(nameof(CanFinish));
+    }
+
+    /// The session costs a process start, so it is probed on the slow schedule, not on every tick.
+    public async Task RefreshSlowAsync()
+    {
         IsLoggedIn = HasCli && await service.GetSessionAsync() == SessionState.Active;
         OnPropertyChanged(nameof(CanFinish));
     }
@@ -50,15 +57,16 @@ public partial class WelcomePageViewModel(BackupService service, IFolderPicker f
         await RefreshAsync();
     }
 
+    /// Installs the CLI first when it is missing: one click, no detour.
     [RelayCommand]
     private async Task LoginAsync()
     {
         Busy = true;
-        Message = "Your browser will open; finish signing in there.";
-        var result = await service.LoginAsync();
-        Message = result.Ok ? "Signed in." : result.Output.Trim();
+        var outcome = await service.SignInAsync(text => Message = text);
+        Message = outcome.Message;
         Busy = false;
         await RefreshAsync();
+        await RefreshSlowAsync();
     }
 
     [RelayCommand]
@@ -76,9 +84,10 @@ public partial class WelcomePageViewModel(BackupService service, IFolderPicker f
             Message = "Choose an existing folder first.";
             return;
         }
-        if (!RemotePath.StartsWith('/'))
+        var problem = SourceFoldersPageViewModel.DestinationProblem(RemotePath);
+        if (problem is not null)
         {
-            Message = "The destination path must start with /, for example /my-files/Backup.";
+            Message = problem;
             return;
         }
         service.Database.AddSource(LocalPath, RemotePath.TrimEnd('/'));

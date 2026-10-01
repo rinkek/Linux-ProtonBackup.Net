@@ -13,6 +13,8 @@ public partial class MainWindow : Window, IFolderPicker
         SettingsIconPath.Data = NavIcons.Gear();
     }
 
+    private void OnQuitClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e) => Close();
+
     public async Task<string?> PickFolderAsync(string title)
     {
         var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions

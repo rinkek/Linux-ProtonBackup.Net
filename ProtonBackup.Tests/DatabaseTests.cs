@@ -81,6 +81,23 @@ public class DatabaseTests : IDisposable
         Assert.Single(_database.GetPending(second));
     }
 
+    [Fact]
+    public void FolderQueriesTreatLikeWildcardsInFolderNamesLiterally()
+    {
+        var source = _database.AddSource("/tmp/bron8", "/my-files/A");
+        _database.UpsertPending(source,
+        [
+            new ScannedFile("a_b/een.txt", 1, 1, null),
+            new ScannedFile("axb/twee.txt", 1, 1, null),
+            new ScannedFile("100%/drie.txt", 1, 1, null),
+            new ScannedFile("100x/vier.txt", 1, 1, null),
+        ]);
+
+        Assert.Equal("een.txt", Assert.Single(_database.GetFilesIn(source, "a_b")).RelativePath.Split('/').Last());
+        Assert.Equal("drie.txt", Assert.Single(_database.GetFilesIn(source, "100%")).RelativePath.Split('/').Last());
+        Assert.Equal(["100%", "100x", "a_b", "axb"], _database.GetChildFolders(source, "").Select(f => f.Name).Order().ToArray());
+    }
+
     public void Dispose()
     {
         _database.Dispose();

@@ -45,7 +45,7 @@ public partial class StatusPageViewModel(BackupService service) : PageViewModelB
                 ? $"{finished.ToLocalTime():dd-MM HH:mm} — {runs[0].Uploaded} uploaded, {runs[0].Failed} failed ({RunRowViewModel.Describe(runs[0].Result)})"
                 : $"started {runs[0].StartedUtc.ToLocalTime():dd-MM HH:mm}, still running";
 
-        NextRun = ExtractNextRun(await Service.Systemd.DescribeTimerAsync());
+        NextRun = await Service.Systemd.NextRunAsync() ?? "no timer";
     }
 
     public async Task CheckForUpdateAsync(bool force = false)
@@ -84,10 +84,11 @@ public partial class StatusPageViewModel(BackupService service) : PageViewModelB
     }
 
     [RelayCommand]
-    private void DismissUpdate()
+    private async Task DismissUpdateAsync()
     {
-        if (AvailableVersion is { } version) Service.UpdateCheck.Dismiss(version);
+        // The banner goes at once; the setting is written off the UI thread.
         UpdateAvailable = false;
+        if (AvailableVersion is { } version) await Task.Run(() => Service.UpdateCheck.Dismiss(version));
     }
 
     public async Task RefreshSlowAsync()
@@ -101,14 +102,6 @@ public partial class StatusPageViewModel(BackupService service) : PageViewModelB
         };
     }
 
-
-    private static string ExtractNextRun(string timerOutput)
-    {
-        var line = timerOutput.Split('\n').FirstOrDefault(l => l.Contains("protonbackup-sync.timer"));
-        if (line is null) return "no timer";
-        var parts = line.Split("  ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        return parts.Length > 0 && parts[0] != "-" ? parts[0] : "no timer";
-    }
 
     partial void OnAutoSyncChanged(bool value)
     {

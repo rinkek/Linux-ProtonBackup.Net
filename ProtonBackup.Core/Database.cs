@@ -70,7 +70,7 @@ public sealed class Database : IDisposable
         using var command = Command(
             "INSERT INTO sources (local_path, remote_path, enabled) VALUES ($l, $r, 1) " +
             "ON CONFLICT(local_path) DO UPDATE SET remote_path = $r RETURNING id;");
-        command.Parameters.AddWithValue("$l", Path.GetFullPath(localPath));
+        command.Parameters.AddWithValue("$l", NormalisePath(localPath));
         command.Parameters.AddWithValue("$r", remotePath);
         return (long)command.ExecuteScalar()!;
     }
@@ -310,13 +310,13 @@ public sealed class Database : IDisposable
                    SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END),
                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END)
             FROM (SELECT substr(rel_path, length($prefix) + 1) AS rest, status
-                  FROM files WHERE source_id = $s AND rel_path LIKE $like)
+                  FROM files WHERE source_id = $s AND rel_path LIKE $like ESCAPE '\')
             WHERE instr(rest, '/') > 0
             GROUP BY folder ORDER BY folder;
             """);
         command.Parameters.AddWithValue("$s", sourceId);
         command.Parameters.AddWithValue("$prefix", prefix);
-        command.Parameters.AddWithValue("$like", prefix + "%");
+        command.Parameters.AddWithValue("$like", EscapeLike(prefix) + "%");
         using var reader = command.ExecuteReader();
         var result = new List<FolderEntry>();
         while (reader.Read())
@@ -330,13 +330,13 @@ public sealed class Database : IDisposable
         var prefix = relativeDirectory.Length == 0 ? "" : relativeDirectory.TrimEnd('/') + "/";
         using var command = Command("""
             SELECT rel_path, size, status, last_sync_utc, last_error FROM files
-            WHERE source_id = $s AND rel_path LIKE $like
+            WHERE source_id = $s AND rel_path LIKE $like ESCAPE '\'
               AND instr(substr(rel_path, length($prefix) + 1), '/') = 0
             ORDER BY rel_path;
             """);
         command.Parameters.AddWithValue("$s", sourceId);
         command.Parameters.AddWithValue("$prefix", prefix);
-        command.Parameters.AddWithValue("$like", prefix + "%");
+        command.Parameters.AddWithValue("$like", EscapeLike(prefix) + "%");
         using var reader = command.ExecuteReader();
         var result = new List<FileEntry>();
         while (reader.Read())
@@ -368,5 +368,21 @@ public sealed class Database : IDisposable
         return result;
     }
 
-    public void Dispose() => _connection.Dispose();
+    /// Closes the file for real: the connection pool would otherwise keep the handle (and a -wal file) alive.
+    public void Dispose()
+    {
+        _connection.Dispose();
+        SqliteConnection.ClearAllPools();
+    }
+
+    /// ".." resolved and no trailing slash, so the same folder is never stored twice.
+    private static string NormalisePath(string path)
+    {
+        var full = Path.GetFullPath(path);
+        return full.Length > 1 ? full.TrimEnd('/') : full;
+    }
+
+    /// Escapes LIKE wildcards so a folder named a_b does not also match axb.
+    private static string EscapeLike(string text) =>
+        text.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
 }

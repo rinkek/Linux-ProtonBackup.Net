@@ -91,14 +91,16 @@ public sealed class SyncEngine(Database database, ProtonDriveCli cli, Action<str
                 ? source.RemotePath
                 : RemotePath.Combine(source.RemotePath, group.Key);
 
-            await cli.EnsureFolderAsync(remoteParent, token);
+            await cli.EnsureFolderAsync(remoteParent, CancellationToken.None);
 
             foreach (var batch in group.Chunk(BatchSize))
             {
                 token.ThrowIfCancellationRequested();
 
                 var localPaths = batch.Select(file => Path.Combine(source.LocalPath, file.RelativePath)).ToList();
-                var result = await cli.UploadAsync(localPaths, remoteParent, token);
+                // A batch that has started is finished and verified; cancellation is only honoured at the
+                // checkpoints between batches, so the counters stay true after a stop.
+                var result = await cli.UploadAsync(localPaths, remoteParent, CancellationToken.None);
 
                 var confirmed = await ConfirmUploadedAsync(remoteParent, batch, token);
                 if (confirmed is null)
@@ -115,7 +117,7 @@ public sealed class SyncEngine(Database database, ProtonDriveCli cli, Action<str
 
                 if (rejected.Count > 0)
                 {
-                    var message = result.Ok ? "Not found on Proton after uploading." : result.Output.Trim();
+                    var message = FailureMessage(result);
                     database.MarkError(source.Id, rejected.Select(file => file.RelativePath), message);
                 }
 
@@ -124,6 +126,14 @@ public sealed class SyncEngine(Database database, ProtonDriveCli cli, Action<str
                 Log($"  {remoteParent}: {succeeded.Count} ok, {rejected.Count} failed");
             }
         }
+    }
+
+    /// Why a file was not on Proton afterwards. A CLI that exits 0 yet stored nothing gets its own message.
+    private static string FailureMessage(CliResult result)
+    {
+        if (result.Ok) return "Not found on Proton after uploading.";
+        var output = result.Output.Trim();
+        return output.Length == 0 ? $"Upload failed with exit code {result.ExitCode}." : output;
     }
 
     private sealed class RunProgress
@@ -139,11 +149,11 @@ public sealed class SyncEngine(Database database, ProtonDriveCli cli, Action<str
     {
         var expected = batch.ToDictionary(file => Path.GetFileName(file.RelativePath), file => file.Size, StringComparer.Ordinal);
 
-        var nodes = await cli.ListAsync(remoteParent, token);
+        var nodes = await cli.ListAsync(remoteParent, CancellationToken.None);
         if (nodes is null)
         {
             await Task.Delay(TimeSpan.FromSeconds(3), token);
-            nodes = await cli.ListAsync(remoteParent, token);
+            nodes = await cli.ListAsync(remoteParent, CancellationToken.None);
         }
         if (nodes is null) return null;
 

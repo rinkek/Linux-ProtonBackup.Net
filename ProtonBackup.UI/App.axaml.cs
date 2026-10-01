@@ -41,18 +41,18 @@ public partial class App : Application
 
     private void SetUpTrayIcon(IClassicDesktopStyleApplicationLifetime desktop, Window window)
     {
-        var show = new NativeMenuItem("Openen");
+        var show = new NativeMenuItem("Open");
         show.Click += (_, _) =>
         {
             window.Show();
             window.Activate();
         };
-        var quit = new NativeMenuItem("Afsluiten");
+        var quit = new NativeMenuItem("Quit");
         quit.Click += (_, _) => desktop.Shutdown();
 
         _trayIcon = new TrayIcon
         {
-            Icon = LoadIcon("ok"),
+            Icon = LoadIcon(TrayState.Ok),
             ToolTipText = "Proton Drive backup",
             Menu = [show, quit],
         };
@@ -70,16 +70,16 @@ public partial class App : Application
             _trayIcon.Icon = LoadIcon(state);
             _trayIcon.ToolTipText = state switch
             {
-                "bezig" => "Proton Drive backup — bezig met synchroniseren",
-                "fout" => "Proton Drive backup — er zijn bestanden met een fout",
-                _ => "Proton Drive backup — bijgewerkt",
+                TrayState.Busy => "Proton Drive backup — syncing",
+                TrayState.Error => "Proton Drive backup — some files failed",
+                _ => "Proton Drive backup — up to date",
             };
         };
     }
 
-    private static WindowIcon LoadIcon(string state)
+    private static WindowIcon LoadIcon(TrayState state)
     {
-        var name = state switch { "bezig" => "tray-busy", "fout" => "tray-error", _ => "tray-ok" };
+        var name = state switch { TrayState.Busy => "tray-busy", TrayState.Error => "tray-error", _ => "tray-ok" };
         // The avares URI uses the assembly name, not the project name.
         var assembly = typeof(App).Assembly.GetName().Name;
         using var stream = AssetLoader.Open(new Uri($"avares://{assembly}/Assets/{name}.png"));

@@ -42,18 +42,16 @@
         <StackPanel Spacing="20">
             <TextBlock Text="Source folders" Theme="{DynamicResource TitleTextBlockStyle}" />
 
-            <ui:FAInfoBar IsOpen="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}"
+            <ui:FAInfoBar IsVisible="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}" IsOpen="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}"
                         Message="{Binding Message}" Severity="Informational" IsClosable="True" />
 
-            <TextBlock Text="No source folders yet. Add one below." Opacity="0.6"
+            <TextBlock Text="No source folders yet. Add one below." Opacity="0.75"
                        IsVisible="{Binding !Sources.Count}" />
 
             <ItemsControl ItemsSource="{Binding Sources}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="core:SyncSource">
-                        <Border CornerRadius="8" Padding="16" Margin="0,0,0,10"
-                                Background="#F4F1FE"
-                                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                        <Border Classes="card" Padding="16" Margin="0,0,0,10">
                             <Grid ColumnDefinitions="*,Auto,Auto,Auto">
                                 <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding LocalPath}" FontWeight="SemiBold" />
@@ -83,9 +81,7 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <Border Padding="18" CornerRadius="8"
-                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+            <Border Classes="card">
                 <StackPanel Spacing="12">
                     <TextBlock Text="Add a source folder" FontWeight="SemiBold" />
                     <Grid ColumnDefinitions="*,Auto">

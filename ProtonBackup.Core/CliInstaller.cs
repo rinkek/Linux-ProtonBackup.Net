@@ -13,13 +13,18 @@ public sealed class CliInstaller(Database database, HttpClient http, Action<stri
     public string InstalledPath => Path.Combine(AppPaths.BinDir, "proton-drive");
     public string PreviousPath => InstalledPath + ".previous";
 
+    private static readonly TimeSpan VersionPageTimeout = TimeSpan.FromSeconds(60);
+
     private void Log(string message) => log?.Invoke(message);
 
     public async Task<CliRelease?> FetchReleaseAsync(CancellationToken token = default)
     {
         try
         {
-            var html = await http.GetStringAsync(_settings.VersionPageUrl, token);
+            // A hung server must not block the update check for as long as a download may take.
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
+            timeout.CancelAfter(VersionPageTimeout);
+            var html = await http.GetStringAsync(_settings.VersionPageUrl, timeout.Token);
             var release = CliVersionPage.Parse(html);
             if (release is null) Log("The version page could not be read; its layout may have changed.");
             return release;
@@ -35,7 +40,12 @@ public sealed class CliInstaller(Database database, HttpClient http, Action<stri
     public async Task<string?> GetInstalledVersionAsync(CancellationToken token = default)
     {
         if (!File.Exists(InstalledPath)) return null;
-        var result = await ProcessRunner.RunAsync(InstalledPath, ["version"], token);
+        CliResult result;
+        try { result = await ProcessRunner.RunAsync(InstalledPath, ["version"], token); }
+        catch (Exception exception) when (exception is IOException or System.ComponentModel.Win32Exception)
+        {
+            return null; // cannot even start (wrong architecture, noexec)
+        }
         if (!result.Ok) return null;
         var line = result.StdOut.Split('\n').FirstOrDefault() ?? "";
         var at = line.LastIndexOf('@');
@@ -56,7 +66,9 @@ public sealed class CliInstaller(Database database, HttpClient http, Action<stri
                 $"No checksum is listed for {platform}. Only proceed if you trust the source.");
 
         Directory.CreateDirectory(AppPaths.BinDir);
-        var temporary = Path.Combine(Path.GetTempPath(), $"proton-drive-{release.Version}-{Guid.NewGuid():N}");
+        // Next to the final file: the move is then an atomic rename, and a large binary needs no room in /tmp.
+        SweepStaleDownloads();
+        var temporary = Path.Combine(AppPaths.BinDir, $"proton-drive-{release.Version}-{Guid.NewGuid():N}.download");
 
         try
         {
@@ -80,7 +92,13 @@ public sealed class CliInstaller(Database database, HttpClient http, Action<stri
                                             UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
                                             UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
 
-            var check = await ProcessRunner.RunAsync(temporary, ["version"], token);
+            CliResult check;
+            try { check = await ProcessRunner.RunAsync(temporary, ["version"], token); }
+            catch (Exception exception) when (exception is IOException or System.ComponentModel.Win32Exception)
+            {
+                File.Delete(temporary);
+                return new InstallOutcome(false, $"The downloaded CLI does not start: {exception.Message}");
+            }
             if (IsIllegalInstruction(check) && platform == CliSettings.DefaultPlatform)
             {
                 File.Delete(temporary);
@@ -114,6 +132,16 @@ public sealed class CliInstaller(Database database, HttpClient http, Action<stri
             if (File.Exists(temporary)) File.Delete(temporary);
             return new InstallOutcome(false, $"Download failed: {exception.Message}");
         }
+    }
+
+    /// Download files left behind by an attempt that crashed.
+    private static void SweepStaleDownloads()
+    {
+        try
+        {
+            foreach (var stale in Directory.EnumerateFiles(AppPaths.BinDir, "*.download")) File.Delete(stale);
+        }
+        catch (IOException) { /* best effort */ }
     }
 
     public InstallOutcome Rollback()

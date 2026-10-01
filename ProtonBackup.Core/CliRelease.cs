@@ -77,6 +77,6 @@ public static partial class CliVersionPage
         return false;
     }
 
-    private static List<int> Numbers(string version) =>
-        [.. version.Split('.', '-', '+').TakeWhile(part => part.Length > 0 && part.All(char.IsDigit)).Select(int.Parse)];
+    private static List<long> Numbers(string version) =>
+        [.. version.Split('.', '-', '+').TakeWhile(part => part.Length > 0 && part.All(char.IsDigit)).Select(long.Parse)];
 }

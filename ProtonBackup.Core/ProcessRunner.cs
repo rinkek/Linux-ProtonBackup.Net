@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 
 namespace ProtonBackup.Core;
 
@@ -12,6 +13,8 @@ public static class ProcessRunner
             RedirectStandardError = true,
             RedirectStandardInput = true,
             UseShellExecute = false,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
         };
         foreach (var argument in arguments) info.ArgumentList.Add(argument);
 
@@ -20,7 +23,17 @@ public static class ProcessRunner
 
         var stdout = process.StandardOutput.ReadToEndAsync(token);
         var stderr = process.StandardError.ReadToEndAsync(token);
-        await process.WaitForExitAsync(token);
+        try
+        {
+            await process.WaitForExitAsync(token);
+        }
+        catch (OperationCanceledException)
+        {
+            // A cancelled call must not leave the child (and its children) running.
+            try { process.Kill(entireProcessTree: true); }
+            catch (InvalidOperationException) { /* already gone */ }
+            throw;
+        }
 
         return new CliResult(process.ExitCode, await stdout, await stderr);
     }

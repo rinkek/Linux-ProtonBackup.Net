@@ -10,13 +10,6 @@
     </UserControl.Resources>
 
     <UserControl.Styles>
-        <Style Selector="Border.card">
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="18" />
-            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
-            <Setter Property="BorderBrush" Value="#4D808080" />
-            <Setter Property="BorderThickness" Value="1" />
-        </Style>
         <Style Selector="Button.icon">
             <Setter Property="Width" Value="36" />
             <Setter Property="Height" Value="36" />
@@ -43,16 +36,16 @@
         <StackPanel Spacing="20">
             <TextBlock Text="Settings" Theme="{DynamicResource TitleTextBlockStyle}" />
 
-            <ui:FAInfoBar IsOpen="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}"
+            <ui:FAInfoBar IsVisible="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}" IsOpen="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}"
                         Message="{Binding Message}" Severity="Informational" IsClosable="True" />
 
             <Border Classes="card">
                 <StackPanel Orientation="Horizontal" Spacing="12">
                     <TextBlock Text="Account:" Opacity="0.7" VerticalAlignment="Center" />
                     <TextBlock Text="{Binding SessionText}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                    <Button Content="Sign in to Proton" Classes="accent"
-                            Command="{Binding LoginCommand}" IsEnabled="{Binding !Busy}" />
-                    <Button Content="Sign out" Classes="accent" Command="{Binding LogoutCommand}" IsEnabled="{Binding !Busy}" />
+                    <Button Content="Sign in to Proton" Classes="plain"
+                            Command="{Binding LoginCommand}" />
+                    <Button Content="Sign out" Classes="plain" Command="{Binding LogoutCommand}" IsEnabled="{Binding !Busy}" />
                 </StackPanel>
             </Border>
 
@@ -77,38 +70,38 @@
                     <TextBox Text="{Binding CliPath}" IsReadOnly="True" PlaceholderText="not found" />
 
                     <StackPanel Orientation="Horizontal" Spacing="12">
-                        <Button Content="Check for updates" Classes="accent" Command="{Binding CheckForUpdateCommand}"
+                        <Button Content="Check for updates" Classes="plain" Command="{Binding CheckForUpdateCommand}"
                                 IsEnabled="{Binding !Busy}" />
-                        <Button Content="Update" Classes="accent" Command="{Binding UpdateCliCommand}" IsEnabled="{Binding !Busy}" />
-                        <Button Content="Restore previous version" Classes="accent" Command="{Binding RollbackCliCommand}"
+                        <Button Content="Update" Classes="plain" Command="{Binding UpdateCliCommand}" IsEnabled="{Binding !Busy}" />
+                        <Button Content="Restore previous version" Classes="plain" Command="{Binding RollbackCliCommand}"
                                 IsEnabled="{Binding !Busy}" />
                     </StackPanel>
 
                     <Expander Header="Advanced CLI settings">
                         <StackPanel Spacing="12" Margin="0,10,0,0">
                             <StackPanel Spacing="4">
-                                <TextBlock Text="Version page URL" Opacity="0.7" FontSize="12" />
+                                <TextBlock Text="Version page URL" Opacity="0.7" FontSize="16" />
                                 <TextBox Text="{Binding VersionPageUrl}" />
                             </StackPanel>
                             <StackPanel Spacing="4">
-                                <TextBlock Text="Download URL template" Opacity="0.7" FontSize="12" />
+                                <TextBlock Text="Download URL template" Opacity="0.7" FontSize="16" />
                                 <TextBox Text="{Binding DownloadTemplate}" />
                             </StackPanel>
                             <StackPanel Spacing="4">
-                                <TextBlock Text="Platform" Opacity="0.7" FontSize="12" />
+                                <TextBlock Text="Platform" Opacity="0.7" FontSize="16" />
                                 <TextBox Text="{Binding Platform}" />
                             </StackPanel>
                             <CheckBox Content="Skip checksum" IsChecked="{Binding SkipChecksum}" />
                             <TextBlock Text="Only turn this on if a custom location offers no checksum."
-                                       Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
-                            <Button Content="Save CLI settings" Classes="accent" Command="{Binding SaveCliSettingsCommand}"
+                                       Opacity="0.75" FontSize="16" TextWrapping="Wrap" />
+                            <Button Content="Save CLI settings" Classes="plain" Command="{Binding SaveCliSettingsCommand}"
                                     HorizontalAlignment="Left" />
                         </StackPanel>
                     </Expander>
 
                     <StackPanel Orientation="Horizontal" Spacing="12">
-                        <Button Content="Rewrite systemd units" Classes="accent" Command="{Binding InstallUnitsCommand}" />
-                        <Button Content="Restore defaults" Classes="accent" Command="{Binding RestoreDefaultsCommand}" />
+                        <Button Content="Rewrite systemd units" Classes="plain" Command="{Binding InstallUnitsCommand}" />
+                        <Button Content="Restore defaults" Classes="plain" Command="{Binding RestoreDefaultsCommand}" />
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -116,9 +109,9 @@
             <Border Classes="card">
                 <StackPanel Spacing="14">
                     <TextBlock Text="Removal" FontWeight="SemiBold" />
-                    <TextBlock TextWrapping="Wrap" Opacity="0.7" FontSize="12"
+                    <TextBlock TextWrapping="Wrap" Opacity="0.7" FontSize="16"
                                Text="Clean up here first, then remove the package with apt remove; apt deliberately leaves your personal data in place." />
-                    <Button Content="Remove and clean up" Classes="accent" Command="{Binding CleanupCommand}"
+                    <Button Content="Remove and clean up" Classes="plain" Command="{Binding CleanupCommand}"
                             IsEnabled="{Binding !Busy}" HorizontalAlignment="Left" />
                 </StackPanel>
             </Border>

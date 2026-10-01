@@ -6,7 +6,7 @@
              x:DataType="vm:StructurePageViewModel">
 
     <Grid RowDefinitions="Auto,Auto,*" >
-        <TextBlock Grid.Row="0" Text="Structure" Theme="{DynamicResource TitleTextBlockStyle}" Margin="0,0,0,16" />
+        <TextBlock Grid.Row="0" Text="File sync" Theme="{DynamicResource TitleTextBlockStyle}" Margin="0,0,0,16" />
 
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,14">
             <ComboBox Grid.Column="0" ItemsSource="{Binding Sources}"
@@ -23,7 +23,7 @@
             <Button Grid.Column="2" Content="Refresh" Classes="accent" Command="{Binding ReloadCommand}" />
         </Grid>
 
-        <TextBlock Grid.Row="2" Text="No source folders yet. Add one under Settings."
+        <TextBlock Grid.Row="2" Text="No source folders yet. Add one under Source folders."
                    Opacity="0.7" IsVisible="{Binding !HasSources}" />
 
         <TreeView Grid.Row="2" ItemsSource="{Binding Nodes}" IsVisible="{Binding !OnlyErrors}">

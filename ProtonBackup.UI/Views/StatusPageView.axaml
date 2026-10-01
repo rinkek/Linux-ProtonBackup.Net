@@ -9,7 +9,7 @@
         <StackPanel Spacing="20">
             <TextBlock Text="Status" Theme="{DynamicResource TitleTextBlockStyle}" />
 
-            <ui:FAInfoBar IsOpen="{Binding UpdateAvailable}"
+            <ui:FAInfoBar IsVisible="{Binding UpdateAvailable}" IsOpen="{Binding UpdateAvailable}"
                           Severity="Informational"
                           IsClosable="True"
                           CloseButtonCommand="{Binding DismissUpdateCommand}"
@@ -26,24 +26,22 @@
                 </ui:FAInfoBar.ActionButton>
             </ui:FAInfoBar>
 
-            <ui:FAInfoBar IsOpen="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}"
+            <ui:FAInfoBar IsVisible="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}" IsOpen="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}"
                         Message="{Binding Message}" Severity="Informational" IsClosable="True" />
 
-            <Border Classes="card" Padding="20" CornerRadius="8"
-                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+            <Border Classes="card">
                 <Grid ColumnDefinitions="*,*,*" >
                     <StackPanel Grid.Column="0" Spacing="4">
                         <TextBlock Text="Synced" Opacity="0.7" />
-                        <TextBlock Text="{Binding SyncedCount}" FontSize="30" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding SyncedCount}" FontSize="36" FontWeight="SemiBold" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Spacing="4">
                         <TextBlock Text="Queued" Opacity="0.7" />
-                        <TextBlock Text="{Binding PendingCount}" FontSize="30" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding PendingCount}" FontSize="36" FontWeight="SemiBold" />
                     </StackPanel>
                     <StackPanel Grid.Column="2" Spacing="4">
                         <TextBlock Text="Failed" Opacity="0.7" />
-                        <TextBlock Text="{Binding ErrorCount}" FontSize="30" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding ErrorCount}" FontSize="36" FontWeight="SemiBold" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -71,16 +69,14 @@
                 <Button Content="Sync now" Classes="accent"
                         Command="{Binding SyncNowCommand}"
                         IsEnabled="{Binding !IsRunning}" />
-                <Button Content="Cancel" Classes="accent"
+                <Button Content="Cancel" Classes="plain"
                         Command="{Binding CancelCommand}"
                         IsEnabled="{Binding IsRunning}" />
                 <ui:FAProgressRing IsActive="{Binding IsRunning}" Width="24" Height="24"
                                  IsVisible="{Binding IsRunning}" />
             </StackPanel>
 
-            <ToggleSwitch Content="Sync automatically"
-                          OnContent="on" OffContent="off"
-                          IsChecked="{Binding AutoSync}" />
+            <CheckBox Content="Sync automatically" IsChecked="{Binding AutoSync}" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

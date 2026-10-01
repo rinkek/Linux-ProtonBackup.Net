@@ -28,6 +28,8 @@ sudo apt install ./protonbackup_0.4.5_amd64.deb
 
 Everything needed is bundled — no separate runtime to install first.
 
+Only one implementation (.NET, Python or Java) is installed at a time: remove the other one completely, including its data, first.
+
 ## Getting started
 
 1. Launch **Proton Drive backup** from your application menu.
@@ -36,10 +38,27 @@ Everything needed is bundled — no separate runtime to install first.
 
 ## Uninstalling
 
-Settings → Removal cleans up the local database, settings and downloaded CLI first (your files on Proton Drive are never touched), then:
+First let the app clean up its own files in your home folder (a package may not delete them); your files on Proton Drive are never touched. Either use Settings → Removal in the window, or:
+
+```sh
+protonbackup --cleanup
+```
+
+Then:
 
 ```sh
 sudo apt remove protonbackup
+```
+
+If the package was removed first, it prints the commands for removing what is left by hand (run them as yourself):
+
+```sh
+systemctl --user disable --now protonbackup-sync.timer
+rm -rf ~/.local/share/ProtonBackup ~/.config/ProtonBackup ~/.cache/ProtonBackup
+rm -f ~/.config/systemd/user/protonbackup-sync.service ~/.config/systemd/user/protonbackup-sync@.service ~/.config/systemd/user/protonbackup-sync.timer
+rm -rf ~/.config/systemd/user/protonbackup-sync.timer.d
+rm -f ~/.config/systemd/user/timers.target.wants/protonbackup-sync.timer ~/.local/share/systemd/timers/stamp-protonbackup-sync.timer
+systemctl --user daemon-reload
 ```
 
 ---
