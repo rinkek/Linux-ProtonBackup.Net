@@ -1,0 +1,86 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:vm="using:ProtonBackup.UI.ViewModels"
+             x:Class="ProtonBackup.UI.Views.StatusPageView"
+             x:DataType="vm:StatusPageViewModel">
+
+    <ScrollViewer>
+        <StackPanel Spacing="20">
+            <TextBlock Text="Status" Theme="{DynamicResource TitleTextBlockStyle}" />
+
+            <ui:FAInfoBar IsOpen="{Binding UpdateAvailable}"
+                          Severity="Informational"
+                          IsClosable="True"
+                          CloseButtonCommand="{Binding DismissUpdateCommand}"
+                          Title="A newer Proton Drive CLI is available">
+                <ui:FAInfoBar.Message>
+                    <MultiBinding StringFormat="Version {0} is available.">
+                        <Binding Path="AvailableVersion" />
+                    </MultiBinding>
+                </ui:FAInfoBar.Message>
+                <ui:FAInfoBar.ActionButton>
+                    <Button Content="Update now" Classes="accent"
+                            Command="{Binding UpdateCliCommand}"
+                            IsEnabled="{Binding !Updating}" />
+                </ui:FAInfoBar.ActionButton>
+            </ui:FAInfoBar>
+
+            <ui:FAInfoBar IsOpen="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        Message="{Binding Message}" Severity="Informational" IsClosable="True" />
+
+            <Border Classes="card" Padding="20" CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                <Grid ColumnDefinitions="*,*,*" >
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock Text="Synced" Opacity="0.7" />
+                        <TextBlock Text="{Binding SyncedCount}" FontSize="30" FontWeight="SemiBold" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Queued" Opacity="0.7" />
+                        <TextBlock Text="{Binding PendingCount}" FontSize="30" FontWeight="SemiBold" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Spacing="4">
+                        <TextBlock Text="Failed" Opacity="0.7" />
+                        <TextBlock Text="{Binding ErrorCount}" FontSize="30" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="170,*">
+                    <TextBlock Grid.Column="0" Text="Last run" Opacity="0.7" />
+                    <TextBlock Grid.Column="1" Text="{Binding LastRun}" TextWrapping="Wrap" />
+                </Grid>
+                <Grid ColumnDefinitions="170,*">
+                    <TextBlock Grid.Column="0" Text="Next run" Opacity="0.7" />
+                    <TextBlock Grid.Column="1" Text="{Binding NextRun}" />
+                </Grid>
+                <Grid ColumnDefinitions="170,*">
+                    <TextBlock Grid.Column="0" Text="Session" Opacity="0.7" />
+                    <TextBlock Grid.Column="1" Text="{Binding SessionText}" />
+                </Grid>
+                <Grid ColumnDefinitions="170,*">
+                    <TextBlock Grid.Column="0" Text="CLI version" Opacity="0.7" />
+                    <TextBlock Grid.Column="1" Text="{Binding CliVersion}" TextWrapping="Wrap" />
+                </Grid>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <Button Content="Sync now" Classes="accent"
+                        Command="{Binding SyncNowCommand}"
+                        IsEnabled="{Binding !IsRunning}" />
+                <Button Content="Cancel" Classes="accent"
+                        Command="{Binding CancelCommand}"
+                        IsEnabled="{Binding IsRunning}" />
+                <ui:FAProgressRing IsActive="{Binding IsRunning}" Width="24" Height="24"
+                                 IsVisible="{Binding IsRunning}" />
+            </StackPanel>
+
+            <ToggleSwitch Content="Sync automatically"
+                          OnContent="on" OffContent="off"
+                          IsChecked="{Binding AutoSync}" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,6 @@
+Upstream-Name: protonbackup
+Files: *
+Copyright: 2026 Rinke Kleijer
+License: eigen gebruik
+ Dit pakket is voor eigen gebruik gemaakt en niet voor distributie bedoeld.
+ De Proton Drive CLI zit er bewust niet in; de app haalt die zelf op.

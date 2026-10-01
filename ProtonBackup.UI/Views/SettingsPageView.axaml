@@ -1,0 +1,127 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:vm="using:ProtonBackup.UI.ViewModels"
+             x:Class="ProtonBackup.UI.Views.SettingsPageView"
+             x:DataType="vm:SettingsPageViewModel">
+
+    <UserControl.Resources>
+        <StreamGeometry x:Key="SaveIcon">M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z</StreamGeometry>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Border.card">
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="18" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="#4D808080" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Button.icon">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.icon PathIcon">
+            <Setter Property="Width" Value="17" />
+            <Setter Property="Height" Value="17" />
+        </Style>
+        <Style Selector="Button.icon:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
+        <Style Selector="Button.icon:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer>
+        <StackPanel Spacing="20">
+            <TextBlock Text="Settings" Theme="{DynamicResource TitleTextBlockStyle}" />
+
+            <ui:FAInfoBar IsOpen="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        Message="{Binding Message}" Severity="Informational" IsClosable="True" />
+
+            <Border Classes="card">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock Text="Account:" Opacity="0.7" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding SessionText}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <Button Content="Sign in to Proton" Classes="accent"
+                            Command="{Binding LoginCommand}" IsEnabled="{Binding !Busy}" />
+                    <Button Content="Sign out" Classes="accent" Command="{Binding LogoutCommand}" IsEnabled="{Binding !Busy}" />
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="Syncing" FontWeight="SemiBold" />
+                    <Grid ColumnDefinitions="Auto,Auto,Auto">
+                        <TextBlock Grid.Column="0" Text="Interval (minutes)" VerticalAlignment="Center" Opacity="0.7" />
+                        <NumericUpDown Grid.Column="1" Value="{Binding IntervalMinutes}" Minimum="1" Maximum="1440"
+                                       Increment="5" Width="150" Margin="14,0" FormatString="0" />
+                        <Button Grid.Column="2" Classes="icon" Command="{Binding ApplyIntervalCommand}"
+                                ToolTip.Tip="Save interval">
+                            <PathIcon Data="{StaticResource SaveIcon}" />
+                        </Button>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="Proton CLI" FontWeight="SemiBold" />
+                    <TextBox Text="{Binding CliPath}" IsReadOnly="True" PlaceholderText="not found" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button Content="Check for updates" Classes="accent" Command="{Binding CheckForUpdateCommand}"
+                                IsEnabled="{Binding !Busy}" />
+                        <Button Content="Update" Classes="accent" Command="{Binding UpdateCliCommand}" IsEnabled="{Binding !Busy}" />
+                        <Button Content="Restore previous version" Classes="accent" Command="{Binding RollbackCliCommand}"
+                                IsEnabled="{Binding !Busy}" />
+                    </StackPanel>
+
+                    <Expander Header="Advanced CLI settings">
+                        <StackPanel Spacing="12" Margin="0,10,0,0">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Version page URL" Opacity="0.7" FontSize="12" />
+                                <TextBox Text="{Binding VersionPageUrl}" />
+                            </StackPanel>
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Download URL template" Opacity="0.7" FontSize="12" />
+                                <TextBox Text="{Binding DownloadTemplate}" />
+                            </StackPanel>
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Platform" Opacity="0.7" FontSize="12" />
+                                <TextBox Text="{Binding Platform}" />
+                            </StackPanel>
+                            <CheckBox Content="Skip checksum" IsChecked="{Binding SkipChecksum}" />
+                            <TextBlock Text="Only turn this on if a custom location offers no checksum."
+                                       Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
+                            <Button Content="Save CLI settings" Classes="accent" Command="{Binding SaveCliSettingsCommand}"
+                                    HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </Expander>
+
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button Content="Rewrite systemd units" Classes="accent" Command="{Binding InstallUnitsCommand}" />
+                        <Button Content="Restore defaults" Classes="accent" Command="{Binding RestoreDefaultsCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="Removal" FontWeight="SemiBold" />
+                    <TextBlock TextWrapping="Wrap" Opacity="0.7" FontSize="12"
+                               Text="Clean up here first, then remove the package with apt remove; apt deliberately leaves your personal data in place." />
+                    <Button Content="Remove and clean up" Classes="accent" Command="{Binding CleanupCommand}"
+                            IsEnabled="{Binding !Busy}" HorizontalAlignment="Left" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

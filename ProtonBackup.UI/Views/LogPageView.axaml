@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ProtonBackup.UI.ViewModels"
+             xmlns:core="using:ProtonBackup.Core"
+             x:Class="ProtonBackup.UI.Views.LogPageView"
+             x:DataType="vm:LogPageViewModel">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+        <TextBlock Grid.Row="0" Text="Log" Theme="{DynamicResource TitleTextBlockStyle}" Margin="0,0,0,16" />
+
+        <TextBlock Grid.Row="1" Text="Recent runs" FontWeight="SemiBold" Margin="0,0,0,8" />
+
+        <Grid Grid.Row="2" RowDefinitions="*,Auto,*">
+            <ListBox Grid.Row="0" ItemsSource="{Binding Runs}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:RunRowViewModel">
+                        <Grid ColumnDefinitions="160,*,Auto" Margin="0,3">
+                            <TextBlock Grid.Column="0" Text="{Binding Started}" />
+                            <TextBlock Grid.Column="1" Text="{Binding Outcome}" Opacity="0.7" />
+                            <TextBlock Grid.Column="2">
+                                <Run Text="{Binding Uploaded}" /><Run Text=" uploaded, " /><Run Text="{Binding Failed}" /><Run Text=" failed" />
+                            </TextBlock>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <TextBlock Grid.Row="1" Text="Files with an error" FontWeight="SemiBold" Margin="0,18,0,8"
+                       IsVisible="{Binding Failures.Count}" />
+
+            <ListBox Grid.Row="2" ItemsSource="{Binding Failures}" IsVisible="{Binding Failures.Count}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="core:FileEntry">
+                        <StackPanel Spacing="2" Margin="0,4">
+                            <TextBlock Text="{Binding RelativePath}" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding LastError}" Opacity="0.7" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </Grid>
+</UserControl>

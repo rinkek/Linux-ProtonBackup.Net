@@ -1,0 +1,124 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:vm="using:ProtonBackup.UI.ViewModels"
+        xmlns:views="using:ProtonBackup.UI.Views"
+        x:Class="ProtonBackup.UI.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="Proton Drive backup"
+        Icon="avares://protonbackup-ui/Assets/protonbackup.png"
+        Width="960" Height="660"
+        MinWidth="720" MinHeight="460">
+
+    <Window.Styles>
+        <Style Selector="ListBox.nav">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem">
+            <Setter Property="Padding" Value="14,11" />
+            <Setter Property="Margin" Value="8,2" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Foreground" Value="#D9D6F0" />
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Background" Value="#3B2E78" />
+            <Setter Property="BorderBrush" Value="#4A3E82" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected TextBlock">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:pointerover">
+            <Setter Property="Background" Value="#2A2153" />
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:pointerover TextBlock">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <Style Selector="Button.navIcon">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.navIcon PathIcon">
+            <Setter Property="Foreground" Value="#D9D6F0" />
+        </Style>
+        <Style Selector="Button.navIcon:pointerover:not(.selected) /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#2A2153" />
+        </Style>
+        <Style Selector="Button.navIcon.selected /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#3B2E78" />
+            <Setter Property="BorderBrush" Value="#4A3E82" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Button.navIcon.selected PathIcon">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+    </Window.Styles>
+
+    <Panel>
+    <views:WelcomePageView DataContext="{Binding Welcome}" Margin="32,16"
+                           IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ShowWelcome}" />
+
+    <Grid ColumnDefinitions="220,*"
+          IsVisible="{Binding !ShowWelcome}">
+        <Border Grid.Column="0" Background="#211A42">
+            <Grid RowDefinitions="Auto,*,Auto,Auto">
+                <StackPanel Grid.Row="0" Margin="20,24,20,22" Orientation="Horizontal" Spacing="10">
+                    <Image Source="avares://protonbackup-ui/Assets/protonbackup.png" Width="30" Height="30" />
+                    <StackPanel VerticalAlignment="Center" Spacing="0">
+                        <TextBlock Text="Proton Drive" FontSize="15" FontWeight="Bold" Foreground="White" />
+                        <TextBlock Text="backup" FontSize="12" Foreground="#9C94C7" />
+                    </StackPanel>
+                </StackPanel>
+
+                <ListBox Grid.Row="1" Classes="nav"
+                         ItemsSource="{Binding Pages}"
+                         SelectedItem="{Binding SelectedNavItem}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:PageViewModelBase">
+                            <TextBlock Text="{Binding Title}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <StackPanel Grid.Row="2" Margin="20,8" Orientation="Horizontal" Spacing="8">
+                    <Button Classes="navIcon" Classes.selected="{Binding IsSettingsSelected}"
+                            Command="{Binding SelectPageCommand}" CommandParameter="{Binding Settings}"
+                            ToolTip.Tip="Settings">
+                        <PathIcon x:Name="SettingsIconPath" Width="18" Height="18" />
+                    </Button>
+                    <Button Classes="navIcon" Classes.selected="{Binding IsLogSelected}"
+                            Command="{Binding SelectPageCommand}" CommandParameter="{Binding Log}"
+                            ToolTip.Tip="Log">
+                        <PathIcon x:Name="LogIconPath" Width="18" Height="18" />
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Grid.Row="3" Margin="20,4,20,20" Spacing="6">
+                    <TextBlock Text="{Binding Status.SessionText}" Foreground="#B6AEDA" FontSize="12" />
+                    <TextBlock Text="{Binding Status.LastRun}" Foreground="#786FA0" FontSize="11" TextWrapping="Wrap" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="1" RowDefinitions="Auto,*" Background="White">
+            <ui:FAInfoBar Grid.Row="0"
+                          Margin="24,18,24,0"
+                          IsOpen="{Binding CliMissing}"
+                          Severity="Warning"
+                          IsClosable="False"
+                          Title="The proton-drive CLI was not found"
+                          Message="Put it in ~/.local/share/ProtonBackup/bin or on your PATH." />
+
+            <ContentControl Grid.Row="1" Content="{Binding SelectedPage}" Margin="28,22,28,24" />
+        </Grid>
+    </Grid>
+    </Panel>
+</Window>

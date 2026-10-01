@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ProtonBackup.UI.ViewModels"
+             xmlns:core="using:ProtonBackup.Core"
+             x:Class="ProtonBackup.UI.Views.StructurePageView"
+             x:DataType="vm:StructurePageViewModel">
+
+    <Grid RowDefinitions="Auto,Auto,*" >
+        <TextBlock Grid.Row="0" Text="Structure" Theme="{DynamicResource TitleTextBlockStyle}" Margin="0,0,0,16" />
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,14">
+            <ComboBox Grid.Column="0" ItemsSource="{Binding Sources}"
+                      SelectedItem="{Binding SelectedSource}"
+                      HorizontalAlignment="Stretch"
+                      PlaceholderText="Choose a source folder">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="core:SyncSource">
+                        <TextBlock Text="{Binding LocalPath}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <CheckBox Grid.Column="1" Content="Errors only" IsChecked="{Binding OnlyErrors}" Margin="14,0" />
+            <Button Grid.Column="2" Content="Refresh" Classes="accent" Command="{Binding ReloadCommand}" />
+        </Grid>
+
+        <TextBlock Grid.Row="2" Text="No source folders yet. Add one under Settings."
+                   Opacity="0.7" IsVisible="{Binding !HasSources}" />
+
+        <TreeView Grid.Row="2" ItemsSource="{Binding Nodes}" IsVisible="{Binding !OnlyErrors}">
+            <TreeView.ItemTemplate>
+                <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="vm:FolderNodeViewModel">
+                    <Grid ColumnDefinitions="*,Auto" Margin="0,3">
+                        <TextBlock Grid.Column="0" Text="{Binding Name}" />
+                        <TextBlock Grid.Column="1" Text="{Binding Summary}" Opacity="0.6" Margin="18,0,0,0" />
+                    </Grid>
+                </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+            <TreeView.Styles>
+                <Style Selector="TreeViewItem" x:DataType="vm:FolderNodeViewModel">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                </Style>
+            </TreeView.Styles>
+        </TreeView>
+
+        <ListBox Grid.Row="2" ItemsSource="{Binding Failures}" IsVisible="{Binding OnlyErrors}">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="core:FileEntry">
+                    <StackPanel Spacing="2" Margin="0,4">
+                        <TextBlock Text="{Binding RelativePath}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding LastError}" Opacity="0.7" TextWrapping="Wrap" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</UserControl>

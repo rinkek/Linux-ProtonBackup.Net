@@ -1,0 +1,101 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:vm="using:ProtonBackup.UI.ViewModels"
+             x:Class="ProtonBackup.UI.Views.WelcomePageView"
+             x:DataType="vm:WelcomePageViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Border.step">
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+        </Style>
+        <Style Selector="TextBlock.done">
+            <Setter Property="Foreground" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="*,Auto">
+    <ScrollViewer Grid.Row="0">
+        <StackPanel Spacing="13" MaxWidth="700" HorizontalAlignment="Center" Margin="0,4,0,16">
+            <TextBlock Text="Welcome" Theme="{DynamicResource TitleTextBlockStyle}" />
+            <TextBlock TextWrapping="Wrap" Opacity="0.75"
+                       Text="Four steps and your backup is running. Files are only copied to Proton Drive; nothing is ever deleted there." />
+
+            <ui:FAInfoBar IsOpen="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}"
+                          Message="{Binding Message}" Severity="Informational" IsClosable="True" />
+
+            <Border Classes="step">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="1. The Proton Drive CLI" FontWeight="SemiBold" />
+                    <TextBlock Text="Found and ready to use." Classes="done" IsVisible="{Binding HasCli}" />
+                    <StackPanel Spacing="10" IsVisible="{Binding !HasCli}">
+                        <TextBlock TextWrapping="Wrap" Opacity="0.75"
+                                   Text="The CLI is not part of the package. It is fetched from Proton and its SHA-512 is verified." />
+                        <Button Content="Download CLI" Classes="accent"
+                                Command="{Binding DownloadCliCommand}" IsEnabled="{Binding !Busy}"
+                                HorizontalAlignment="Left" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="step">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="2. Sign in to Proton" FontWeight="SemiBold" />
+                    <TextBlock Text="Signed in." Classes="done" IsVisible="{Binding IsLoggedIn}" />
+                    <StackPanel Spacing="10" IsVisible="{Binding !IsLoggedIn}">
+                        <TextBlock TextWrapping="Wrap" Opacity="0.75"
+                                   Text="Signing in happens in your browser. The app stores no password; the session goes into your desktop keyring." />
+                        <Button Content="Sign in to Proton" Classes="accent"
+                                Command="{Binding LoginCommand}"
+                                IsEnabled="{Binding HasCli}" HorizontalAlignment="Left" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="step">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="3. What do you want to back up?" FontWeight="SemiBold" />
+                    <TextBlock Text="Source folder set." Classes="done" IsVisible="{Binding HasSource}" />
+                    <StackPanel Spacing="10" IsVisible="{Binding !HasSource}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBox Grid.Column="0" Text="{Binding LocalPath}" PlaceholderText="Local folder" />
+                            <Button Grid.Column="1" Content="Browse" Classes="accent" Margin="8,0,0,0" Command="{Binding BrowseCommand}" />
+                        </Grid>
+                        <TextBox Text="{Binding RemotePath}" PlaceholderText="Destination path on Proton" />
+                        <Button Content="Add" Classes="accent" Command="{Binding AddSourceCommand}"
+                                HorizontalAlignment="Left" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="step">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="4. Sync automatically" FontWeight="SemiBold" />
+                    <TextBlock Text="The timer is on." Classes="done" IsVisible="{Binding TimerEnabled}" />
+                    <StackPanel Spacing="10" IsVisible="{Binding !TimerEnabled}">
+                        <TextBlock TextWrapping="Wrap" Opacity="0.75"
+                                   Text="Turn on the timer so syncing also happens when this app is closed. You can change this later." />
+                        <Button Content="Turn on the timer" Classes="accent" Command="{Binding EnableTimerCommand}"
+                                HorizontalAlignment="Left" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+
+    <Border Grid.Row="1" Padding="0,12,0,0" Margin="0,4,0,0"
+            BorderThickness="0,1,0,0"
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+        <StackPanel MaxWidth="700" HorizontalAlignment="Center">
+            <Button Content="Get started" Classes="accent" HorizontalAlignment="Right"
+                    Command="{Binding FinishCommand}" IsEnabled="{Binding CanFinish}" />
+        </StackPanel>
+    </Border>
+    </Grid>
+</UserControl>

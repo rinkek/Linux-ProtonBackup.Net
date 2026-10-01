@@ -1,0 +1,59 @@
+Test 4: CLI vanuit een systemd user-service
+datum: 2026-09-28T19:07:43+02:00
+cli:   /home/rinke/.local/share/ProtonBackup/bin/proton-drive
+
+=== Omgeving van de desktopsessie ===
+XDG_SESSION_TYPE=wayland
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+PROTON_DRIVE_CREDENTIALS_STORE=<niet gezet, standaard secret store>
+linger: no
+secret-store daemons:
+3492 /usr/bin/kwalletd6
+
+=== A. Rechtstreeks in deze shell (baseline) ===
+exit=0  OK - sessie bereikbaar
+
+=== B. Vanuit een transient systemd user-service ===
+$ systemd-run --user --wait --pipe --collect /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem list /my-files --json
+Running as unit: protonbackup-probe-18707.service; invocation ID: e702b271d0b94aa2966bbe09e305aef7
+          Finished with result: success
+Main processes terminated with: code=exited, status=0/SUCCESS
+               Service runtime: 1.124s
+             CPU time consumed: 248ms
+                   Memory peak: 59.9M (swap: 0B)
+exit=0
+>> GOED: de service komt bij de sessie. De secret store volstaat; pass is niet nodig.
+
+=== C. Omgeving zoals de service die ziet ===
+PATH=/home/rinke/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/rinke/.lmstudio/bin
+XDG_DATA_DIRS=/home/rinke/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share:/var/lib/snapd/desktop
+XDG_RUNTIME_DIR=/run/user/1000
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+XDG_CONFIG_DIRS=/home/rinke/.config/kdedefaults:/etc/xdg:/usr/share/kubuntu-default-settings/kf5-settings
+XDG_CURRENT_DESKTOP=KDE
+XDG_MENU_PREFIX=plasma-
+XDG_SEAT=seat0
+XDG_SEAT_PATH=/org/freedesktop/DisplayManager/Seat0
+XDG_SESSION_CLASS=user
+XDG_SESSION_DESKTOP=KDE
+XDG_SESSION_ID=3
+XDG_SESSION_PATH=/org/freedesktop/DisplayManager/Session1
+XDG_SESSION_TYPE=wayland
+XDG_VTNR=2
+
+=== D. Met een expliciet lege D-Bus-omgeving (simuleert een kale service) ===
+Running as unit: protonbackup-nodbus-18707.service; invocation ID: 84fa99c6e61847dd84ebb9d8281e5b13
+Failed to load session from secrets (ensure you have secrets available, read the README for more information): The given address is empty (code: 13)
+          Finished with result: exit-code
+Main processes terminated with: code=exited, status=1/FAILURE
+               Service runtime: 134ms
+             CPU time consumed: 156ms
+                   Memory peak: 57.3M (swap: 0B)
+exit=1  (mislukken hier is te verwachten en verklaart waarom de sessie soms wegvalt)
+
+=== Nog handmatig te doen ===
+1. Vergrendel je scherm / sluit de keyring en draai dit script opnieuw -> werkt B dan nog?
+2. Herstart de machine, log in maar open GEEN terminal-wachtwoordprompt, draai dit opnieuw.
+3. Zet zo nodig 'loginctl enable-linger rinke' aan en herhaal stap 2.
+
+Rapport: /home/rinke/CloudDrive/Sources/Rider/ProtonDrive/probe/probe-systemd-20260928-190743.txt

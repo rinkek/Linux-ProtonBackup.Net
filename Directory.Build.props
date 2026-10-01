@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <Version>0.4.5</Version>
+    <Authors>Rinke Kleijer</Authors>
+    <Product>Proton Drive backup</Product>
+    <!-- Zonder ICU hangt het pakket niet aan een libicu-versie die per release wijzigt. -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <!-- De app leunt op systemd, de secret store en stat uit libc: Linux-only. -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.Versioning.SupportedOSPlatform">
+      <_Parameter1>linux</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+</Project>

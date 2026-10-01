@@ -1,0 +1,102 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:vm="using:ProtonBackup.UI.ViewModels"
+             xmlns:core="using:ProtonBackup.Core"
+             x:Class="ProtonBackup.UI.Views.SourceFoldersPageView"
+             x:DataType="vm:SourceFoldersPageViewModel">
+
+    <UserControl.Resources>
+        <StreamGeometry x:Key="UploadIcon">M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z</StreamGeometry>
+        <StreamGeometry x:Key="RefreshIcon">M17.65 6.35A7.958 7.958 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z</StreamGeometry>
+        <StreamGeometry x:Key="DeleteIcon">M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z</StreamGeometry>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Button.icon">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.icon PathIcon">
+            <Setter Property="Width" Value="17" />
+            <Setter Property="Height" Value="17" />
+        </Style>
+        <Style Selector="Button.icon:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
+        <Style Selector="Button.icon:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+        </Style>
+        <Style Selector="Button.icon.danger:pointerover PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer>
+        <StackPanel Spacing="20">
+            <TextBlock Text="Source folders" Theme="{DynamicResource TitleTextBlockStyle}" />
+
+            <ui:FAInfoBar IsOpen="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        Message="{Binding Message}" Severity="Informational" IsClosable="True" />
+
+            <TextBlock Text="No source folders yet. Add one below." Opacity="0.6"
+                       IsVisible="{Binding !Sources.Count}" />
+
+            <ItemsControl ItemsSource="{Binding Sources}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="core:SyncSource">
+                        <Border CornerRadius="8" Padding="16" Margin="0,0,0,10"
+                                Background="#F4F1FE"
+                                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                            <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding LocalPath}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding RemotePath}" Opacity="0.7" />
+                                </StackPanel>
+                                <Button Grid.Column="1" Classes="icon"
+                                        ToolTip.Tip="Sync now"
+                                        Command="{Binding $parent[ItemsControl].((vm:SourceFoldersPageViewModel)DataContext).SyncSourceCommand}"
+                                        CommandParameter="{Binding}">
+                                    <PathIcon Data="{StaticResource UploadIcon}" />
+                                </Button>
+                                <Button Grid.Column="2" Classes="icon"
+                                        ToolTip.Tip="Go through everything again, including files already considered synced. Use this if something was deleted on Proton."
+                                        Command="{Binding $parent[ItemsControl].((vm:SourceFoldersPageViewModel)DataContext).ForceSourceCommand}"
+                                        CommandParameter="{Binding}">
+                                    <PathIcon Data="{StaticResource RefreshIcon}" />
+                                </Button>
+                                <Button Grid.Column="3" Classes="icon danger"
+                                        ToolTip.Tip="Remove this source folder from the list. Whatever is already on Proton stays there."
+                                        Command="{Binding $parent[ItemsControl].((vm:SourceFoldersPageViewModel)DataContext).RemoveSourceCommand}"
+                                        CommandParameter="{Binding}">
+                                    <PathIcon Data="{StaticResource DeleteIcon}" />
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Border Padding="18" CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Add a source folder" FontWeight="SemiBold" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox Grid.Column="0" Text="{Binding NewLocalPath}" PlaceholderText="Local folder" />
+                        <Button Grid.Column="1" Content="Browse" Classes="accent" Margin="8,0,0,0" Command="{Binding BrowseCommand}" />
+                    </Grid>
+                    <TextBox Text="{Binding NewRemotePath}" PlaceholderText="Destination path on Proton, for example /my-files/Backup" />
+                    <Button Content="Add" Classes="accent" Command="{Binding AddSourceCommand}"
+                            HorizontalAlignment="Left" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,29 @@
+# Build output
+bin/
+obj/
+*.user
+*.suo
+
+# IDE
+.idea/
+.vs/
+*.DotSettings.user
+
+# Design documents and Office lock files
+*.docx
+*.pdf
+.~lock.*
+
+# OS
+.directory
+Thumbs.db
+.DS_Store
+
+# Packaging output
+packaging/**/*.deb
+packaging/build/
+TestResults/
+
+# The built package
+*.deb
+packaging/build/

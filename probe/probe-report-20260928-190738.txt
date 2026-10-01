@@ -1,0 +1,259 @@
+Proefopstelling Proton Drive backup-tool
+datum:       2026-09-28T19:07:38+02:00
+cli:         /home/rinke/.local/share/ProtonBackup/bin/proton-drive
+cli-versie:  Proton Drive CLI cli-drive@0.8.0+06e8c605
+testmap:     /my-files/ProtonBackupProbe
+werkmap:     /tmp/protonprobe.tNcl14
+
+==============================================================
+Sessiecontrole (voorwaarde voor de rest)
+==============================================================
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem list /my-files --json
+[
+
+]
+(exit 0)
+>> Sessie werkt.
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem create-folder /my-files ProtonBackupProbe
+{
+  uid: 'xxxx5fL-tGQRuC-ygy7ltw~f30ThkxxNCSEbIqcRWEMHA',
+  parentUid: 'xxxx5fL-tGQRuC-ygy7ltw~TVcrzdr3mP_BMNpxU3PHug',
+  name: { ok: true, value: 'ProtonBackupProbe' },
+  keyAuthor: { ok: true, value: 'rinke.k@outlook.com' },
+  nameAuthor: { ok: true, value: 'rinke.k@outlook.com' },
+  directRole: 'inherited',
+  membership: undefined,
+  ownedBy: { email: 'rinke.k@outlook.com' },
+  type: 'folder',
+  mediaType: 'Folder',
+  isShared: false,
+  isSharedByUrl: false,
+  creationTime: 2026-09-28T17:07:39.924Z,
+  modificationTime: 2026-09-28T17:07:39.924Z,
+  trashTime: undefined,
+  totalStorageSize: undefined,
+  activeRevision: undefined,
+  folder: { isImported: false },
+  deprecatedShareId: undefined,
+  treeEventScopeId: 'xxxx5fL-tGQRuC-ygy7ltw',
+  errors: undefined
+}
+(exit 0)
+
+==============================================================
+Test 1: hetzelfde bestand twee keer uploaden naar hetzelfde pad
+==============================================================
+--- 1a: eerste upload (-f create-new-revision) ---
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem upload -f create-new-revision -d merge -t /tmp/protonprobe.tNcl14/t1/same.txt /my-files/ProtonBackupProbe
+Transfer summary:
+  Uploaded: 1 items (9 B)
+(exit 0)
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem list /my-files/ProtonBackupProbe --json
+[
+{"uid":"xxxx5fL-tGQRuC-ygy7ltw~kvCcRCbtFe8l35__8bevPg","parentUid":"xxxx5fL-tGQRuC-ygy7ltw~f30ThkxxNCSEbIqcRWEMHA","name":{"ok":true,"value":"same.txt"},"keyAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"nameAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"directRole":"admin","ownedBy":{"email":"rinke.k@outlook.com"},"type":"file","mediaType":"text/plain;charset=utf-8","isShared":false,"isSharedByUrl":false,"creationTime":"2026-09-28T17:07:42.000Z","modificationTime":"2026-09-28T17:07:42.000Z","totalStorageSize":87,"activeRevision":{"uid":"xxxx5fL-tGQRuC-ygy7ltw~kvCcRCbtFe8l35__8bevPg~DL9Q8Hy89FyLHkhjNJ6TBA","state":"active","creationTime":"2026-09-28T17:07:42.000Z","contentAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"storageSize":87,"isImported":false,"claimedSize":9,"claimedModificationTime":"2026-09-28T17:07:39.989Z","claimedDigests":{"sha1":"6ec44483dd1f0b0a3da37891d83d0cc3f4a98918","sha1Verified":false},"claimedAdditionalMetadata":{"Media":{}}},"treeEventScopeId":"xxxx5fL-tGQRuC-ygy7ltw"}
+]
+(exit 0)
+--- 1b: identieke inhoud nogmaals (verwacht: overgeslagen) ---
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem upload -f create-new-revision -d merge -t /tmp/protonprobe.tNcl14/t1/same.txt /my-files/ProtonBackupProbe
+Transfer summary:
+  Uploaded: 0 items (0 B)
+  Skipped: 1 items
+  - same.txt
+(exit 0)
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem list /my-files/ProtonBackupProbe --json
+[
+{"uid":"xxxx5fL-tGQRuC-ygy7ltw~kvCcRCbtFe8l35__8bevPg","parentUid":"xxxx5fL-tGQRuC-ygy7ltw~f30ThkxxNCSEbIqcRWEMHA","name":{"ok":true,"value":"same.txt"},"keyAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"nameAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"directRole":"admin","ownedBy":{"email":"rinke.k@outlook.com"},"type":"file","mediaType":"text/plain;charset=utf-8","isShared":false,"isSharedByUrl":false,"creationTime":"2026-09-28T17:07:42.000Z","modificationTime":"2026-09-28T17:07:42.000Z","totalStorageSize":87,"activeRevision":{"uid":"xxxx5fL-tGQRuC-ygy7ltw~kvCcRCbtFe8l35__8bevPg~DL9Q8Hy89FyLHkhjNJ6TBA","state":"active","creationTime":"2026-09-28T17:07:42.000Z","contentAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"storageSize":87,"isImported":false,"claimedSize":9,"claimedModificationTime":"2026-09-28T17:07:39.989Z","claimedDigests":{"sha1":"6ec44483dd1f0b0a3da37891d83d0cc3f4a98918","sha1Verified":false},"claimedAdditionalMetadata":{"Media":{}}},"treeEventScopeId":"xxxx5fL-tGQRuC-ygy7ltw"}
+]
+(exit 0)
+--- 1c: gewijzigde inhoud, zelfde naam (verwacht: nieuwe revisie, GEEN duplicaat) ---
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem upload -f create-new-revision -d merge -t /tmp/protonprobe.tNcl14/t1/same.txt /my-files/ProtonBackupProbe
+Transfer summary:
+  Uploaded: 1 items (20 B)
+(exit 0)
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem list /my-files/ProtonBackupProbe --json
+[
+{"uid":"xxxx5fL-tGQRuC-ygy7ltw~kvCcRCbtFe8l35__8bevPg","parentUid":"xxxx5fL-tGQRuC-ygy7ltw~f30ThkxxNCSEbIqcRWEMHA","name":{"ok":true,"value":"same.txt"},"keyAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"nameAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"directRole":"admin","ownedBy":{"email":"rinke.k@outlook.com"},"type":"file","mediaType":"text/plain;charset=utf-8","isShared":false,"isSharedByUrl":false,"creationTime":"2026-09-28T17:07:42.000Z","modificationTime":"2026-09-28T17:07:46.000Z","totalStorageSize":185,"activeRevision":{"uid":"xxxx5fL-tGQRuC-ygy7ltw~kvCcRCbtFe8l35__8bevPg~c8osiZr3a7MkxZKsPM8uLA","state":"active","creationTime":"2026-09-28T17:07:46.000Z","contentAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"storageSize":98,"isImported":false,"claimedSize":20,"claimedModificationTime":"2026-09-28T17:07:45.562Z","claimedDigests":{"sha1":"83171214c63fdc7b956868188b72885e1b27ae2d","sha1Verified":false},"claimedAdditionalMetadata":{"Media":{}}},"treeEventScopeId":"xxxx5fL-tGQRuC-ygy7ltw"}
+]
+(exit 0)
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem info /my-files/ProtonBackupProbe/same.txt --json
+{"uid":"xxxx5fL-tGQRuC-ygy7ltw~kvCcRCbtFe8l35__8bevPg","parentUid":"xxxx5fL-tGQRuC-ygy7ltw~f30ThkxxNCSEbIqcRWEMHA","name":{"ok":true,"value":"same.txt"},"keyAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"nameAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"directRole":"admin","ownedBy":{"email":"rinke.k@outlook.com"},"type":"file","mediaType":"text/plain;charset=utf-8","isShared":false,"isSharedByUrl":false,"creationTime":"2026-09-28T17:07:42.000Z","modificationTime":"2026-09-28T17:07:46.000Z","totalStorageSize":185,"activeRevision":{"uid":"xxxx5fL-tGQRuC-ygy7ltw~kvCcRCbtFe8l35__8bevPg~c8osiZr3a7MkxZKsPM8uLA","state":"active","creationTime":"2026-09-28T17:07:46.000Z","contentAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"storageSize":98,"isImported":false,"claimedSize":20,"claimedModificationTime":"2026-09-28T17:07:45.562Z","claimedDigests":{"sha1":"83171214c63fdc7b956868188b72885e1b27ae2d","sha1Verified":false},"claimedAdditionalMetadata":{"Media":{}}},"treeEventScopeId":"xxxx5fL-tGQRuC-ygy7ltw"}
+(exit 0)
+--- 1d: ZONDER -f, niet-interactief (verwacht: prompt => daemon mag dit nooit doen) ---
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem upload /tmp/protonprobe.tNcl14/t1/same.txt /my-files/ProtonBackupProbe  < /dev/null
+Conflict on "same.txt" (file). Type a strategy (create-new-revision, rename, replace, skip; or abbreviations), or [a]pply-to-all
+> Transfer summary:
+  Uploaded: 0 items (0 B)
+  Skipped: 1 items
+  - same.txt
+(exit 0)
+
+==============================================================
+Test 2: uploaden naar een pad waarvan de tussenmappen nog niet bestaan
+==============================================================
+--- 2a: los bestand naar niet-bestaande parent (/my-files/ProtonBackupProbe/niveau1/niveau2) ---
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem upload -f create-new-revision -d merge -t /tmp/protonprobe.tNcl14/t2/deep.txt /my-files/ProtonBackupProbe/niveau1/niveau2
+Node not found: niveau1
+(exit 1)
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem list /my-files/ProtonBackupProbe --json
+[
+{"uid":"xxxx5fL-tGQRuC-ygy7ltw~kvCcRCbtFe8l35__8bevPg","parentUid":"xxxx5fL-tGQRuC-ygy7ltw~f30ThkxxNCSEbIqcRWEMHA","name":{"ok":true,"value":"same.txt"},"keyAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"nameAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"directRole":"admin","ownedBy":{"email":"rinke.k@outlook.com"},"type":"file","mediaType":"text/plain;charset=utf-8","isShared":false,"isSharedByUrl":false,"creationTime":"2026-09-28T17:07:42.000Z","modificationTime":"2026-09-28T17:07:46.000Z","totalStorageSize":185,"activeRevision":{"uid":"xxxx5fL-tGQRuC-ygy7ltw~kvCcRCbtFe8l35__8bevPg~c8osiZr3a7MkxZKsPM8uLA","state":"active","creationTime":"2026-09-28T17:07:46.000Z","contentAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"storageSize":98,"isImported":false,"claimedSize":20,"claimedModificationTime":"2026-09-28T17:07:45.562Z","claimedDigests":{"sha1":"83171214c63fdc7b956868188b72885e1b27ae2d","sha1Verified":false},"claimedAdditionalMetadata":{"Media":{}}},"treeEventScopeId":"xxxx5fL-tGQRuC-ygy7ltw"}
+]
+(exit 0)
+--- 2b: hele lokale mapstructuur uploaden (verwacht: CLI maakt de boom zelf) ---
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem upload -f create-new-revision -d merge -t /tmp/protonprobe.tNcl14/t2tree /my-files/ProtonBackupProbe
+Transfer summary:
+  Uploaded: 6 items (6 B)
+(exit 0)
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem list /my-files/ProtonBackupProbe/t2tree --json
+[
+{"uid":"xxxx5fL-tGQRuC-ygy7ltw~4yHGudxvfVqrrzrDRzrROA","parentUid":"xxxx5fL-tGQRuC-ygy7ltw~mjEKIU09K71LOpmhlTYlqA","name":{"ok":true,"value":"sub"},"keyAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"nameAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"directRole":"admin","ownedBy":{"email":"rinke.k@outlook.com"},"type":"folder","isShared":false,"isSharedByUrl":false,"creationTime":"2026-09-28T17:07:53.000Z","modificationTime":"2026-09-28T17:07:53.000Z","folder":{"isImported":false},"treeEventScopeId":"xxxx5fL-tGQRuC-ygy7ltw"},
+{"uid":"xxxx5fL-tGQRuC-ygy7ltw~ejxCtuzxjpcY49-JHXn6Lw","parentUid":"xxxx5fL-tGQRuC-ygy7ltw~mjEKIU09K71LOpmhlTYlqA","name":{"ok":true,"value":"a.txt"},"keyAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"nameAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"directRole":"admin","ownedBy":{"email":"rinke.k@outlook.com"},"type":"file","mediaType":"text/plain;charset=utf-8","isShared":false,"isSharedByUrl":false,"creationTime":"2026-09-28T17:07:53.000Z","modificationTime":"2026-09-28T17:07:53.000Z","totalStorageSize":80,"activeRevision":{"uid":"xxxx5fL-tGQRuC-ygy7ltw~ejxCtuzxjpcY49-JHXn6Lw~YInDFkPWmygD_1jojaE3LA","state":"active","creationTime":"2026-09-28T17:07:53.000Z","contentAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"storageSize":80,"isImported":false,"claimedSize":2,"claimedModificationTime":"2026-09-28T17:07:52.336Z","claimedDigests":{"sha1":"3f786850e387550fdab836ed7e6dc881de23001b","sha1Verified":false},"claimedAdditionalMetadata":{"Media":{}}},"treeEventScopeId":"xxxx5fL-tGQRuC-ygy7ltw"}
+]
+(exit 0)
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem list /my-files/ProtonBackupProbe/t2tree/sub --json
+[
+{"uid":"xxxx5fL-tGQRuC-ygy7ltw~FSd9iWc0a3tMotGXyXe77Q","parentUid":"xxxx5fL-tGQRuC-ygy7ltw~4yHGudxvfVqrrzrDRzrROA","name":{"ok":true,"value":"subsub"},"keyAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"nameAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"directRole":"admin","ownedBy":{"email":"rinke.k@outlook.com"},"type":"folder","isShared":false,"isSharedByUrl":false,"creationTime":"2026-09-28T17:07:54.000Z","modificationTime":"2026-09-28T17:07:54.000Z","folder":{"isImported":false},"treeEventScopeId":"xxxx5fL-tGQRuC-ygy7ltw"},
+{"uid":"xxxx5fL-tGQRuC-ygy7ltw~CP18Hh3rbgX-L7si8TIWSw","parentUid":"xxxx5fL-tGQRuC-ygy7ltw~4yHGudxvfVqrrzrDRzrROA","name":{"ok":true,"value":"b.txt"},"keyAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"nameAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"directRole":"admin","ownedBy":{"email":"rinke.k@outlook.com"},"type":"file","mediaType":"text/plain;charset=utf-8","isShared":false,"isSharedByUrl":false,"creationTime":"2026-09-28T17:07:54.000Z","modificationTime":"2026-09-28T17:07:54.000Z","totalStorageSize":80,"activeRevision":{"uid":"xxxx5fL-tGQRuC-ygy7ltw~CP18Hh3rbgX-L7si8TIWSw~zGgK2h7msytNoft7je48cQ","state":"active","creationTime":"2026-09-28T17:07:54.000Z","contentAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"storageSize":80,"isImported":false,"claimedSize":2,"claimedModificationTime":"2026-09-28T17:07:52.336Z","claimedDigests":{"sha1":"89e6c98d92887913cadf06b2adb97f26cde4849b","sha1Verified":false},"claimedAdditionalMetadata":{"Media":{}}},"treeEventScopeId":"xxxx5fL-tGQRuC-ygy7ltw"}
+]
+(exit 0)
+
+==============================================================
+Test 3: tijdmeting - per bestand, gebundeld in een aanroep, en per map
+==============================================================
+--- 3a: eenmalige overhead van een enkele aanroep ---
+opstarttijd CLI: .194918180 s
+--- 3b: 100 bestanden, elk een eigen aanroep ---
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem create-folder /my-files/ProtonBackupProbe each
+{
+  uid: 'xxxx5fL-tGQRuC-ygy7ltw~Mq92wGriWncimHUHtiRQUg',
+  parentUid: 'xxxx5fL-tGQRuC-ygy7ltw~f30ThkxxNCSEbIqcRWEMHA',
+  name: { ok: true, value: 'each' },
+  keyAuthor: { ok: true, value: 'rinke.k@outlook.com' },
+  nameAuthor: { ok: true, value: 'rinke.k@outlook.com' },
+  directRole: 'inherited',
+  membership: undefined,
+  ownedBy: { email: 'rinke.k@outlook.com' },
+  type: 'folder',
+  mediaType: 'Folder',
+  isShared: false,
+  isSharedByUrl: false,
+  creationTime: 2026-09-28T17:07:58.960Z,
+  modificationTime: 2026-09-28T17:07:58.960Z,
+  trashTime: undefined,
+  totalStorageSize: undefined,
+  activeRevision: undefined,
+  folder: { isImported: false },
+  deprecatedShareId: undefined,
+  treeEventScopeId: 'xxxx5fL-tGQRuC-ygy7ltw',
+  errors: undefined
+}
+(exit 0)
+100 losse aanroepen: 160.193796089 s
+--- 3c: 100 bestanden als argumenten in EEN aanroep ---
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem create-folder /my-files/ProtonBackupProbe batch
+{
+  uid: 'xxxx5fL-tGQRuC-ygy7ltw~-7Aqly2JR_H6CnAzY0l5NA',
+  parentUid: 'xxxx5fL-tGQRuC-ygy7ltw~f30ThkxxNCSEbIqcRWEMHA',
+  name: { ok: true, value: 'batch' },
+  keyAuthor: { ok: true, value: 'rinke.k@outlook.com' },
+  nameAuthor: { ok: true, value: 'rinke.k@outlook.com' },
+  directRole: 'inherited',
+  membership: undefined,
+  ownedBy: { email: 'rinke.k@outlook.com' },
+  type: 'folder',
+  mediaType: 'Folder',
+  isShared: false,
+  isSharedByUrl: false,
+  creationTime: 2026-09-28T17:10:39.980Z,
+  modificationTime: 2026-09-28T17:10:39.980Z,
+  trashTime: undefined,
+  totalStorageSize: undefined,
+  activeRevision: undefined,
+  folder: { isImported: false },
+  deprecatedShareId: undefined,
+  treeEventScopeId: 'xxxx5fL-tGQRuC-ygy7ltw',
+  errors: undefined
+}
+(exit 0)
+1 aanroep met 100 argumenten: 7.081251762 s
+--- 3d: de map in een keer uploaden ---
+1 mapupload van 100 bestanden: 19.447525901 s
+
+==============================================================
+Test 6: vorm van filesystem list --json
+==============================================================
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem list /my-files --json
+[
+{"uid":"xxxx5fL-tGQRuC-ygy7ltw~f30ThkxxNCSEbIqcRWEMHA","parentUid":"xxxx5fL-tGQRuC-ygy7ltw~TVcrzdr3mP_BMNpxU3PHug","name":{"ok":true,"value":"ProtonBackupProbe"},"keyAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"nameAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"directRole":"admin","ownedBy":{"email":"rinke.k@outlook.com"},"type":"folder","isShared":false,"isSharedByUrl":false,"creationTime":"2026-09-28T17:07:39.000Z","modificationTime":"2026-09-28T17:07:39.000Z","folder":{"isImported":false},"treeEventScopeId":"xxxx5fL-tGQRuC-ygy7ltw"}
+]
+(exit 0)
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem list /my-files/ProtonBackupProbe -t file --json
+[
+{"uid":"xxxx5fL-tGQRuC-ygy7ltw~kvCcRCbtFe8l35__8bevPg","parentUid":"xxxx5fL-tGQRuC-ygy7ltw~f30ThkxxNCSEbIqcRWEMHA","name":{"ok":true,"value":"same.txt"},"keyAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"nameAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"directRole":"admin","ownedBy":{"email":"rinke.k@outlook.com"},"type":"file","mediaType":"text/plain;charset=utf-8","isShared":false,"isSharedByUrl":false,"creationTime":"2026-09-28T17:07:42.000Z","modificationTime":"2026-09-28T17:07:46.000Z","totalStorageSize":185,"activeRevision":{"uid":"xxxx5fL-tGQRuC-ygy7ltw~kvCcRCbtFe8l35__8bevPg~c8osiZr3a7MkxZKsPM8uLA","state":"active","creationTime":"2026-09-28T17:07:46.000Z","contentAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"storageSize":98,"isImported":false,"claimedSize":20,"claimedModificationTime":"2026-09-28T17:07:45.562Z","claimedDigests":{"sha1":"83171214c63fdc7b956868188b72885e1b27ae2d","sha1Verified":false},"claimedAdditionalMetadata":{"Media":{}}},"treeEventScopeId":"xxxx5fL-tGQRuC-ygy7ltw"}
+]
+(exit 0)
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem info /my-files/ProtonBackupProbe --json
+{"uid":"xxxx5fL-tGQRuC-ygy7ltw~f30ThkxxNCSEbIqcRWEMHA","parentUid":"xxxx5fL-tGQRuC-ygy7ltw~TVcrzdr3mP_BMNpxU3PHug","name":{"ok":true,"value":"ProtonBackupProbe"},"keyAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"nameAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"directRole":"admin","ownedBy":{"email":"rinke.k@outlook.com"},"type":"folder","isShared":false,"isSharedByUrl":false,"creationTime":"2026-09-28T17:07:39.000Z","modificationTime":"2026-09-28T17:07:39.000Z","folder":{"isImported":false},"treeEventScopeId":"xxxx5fL-tGQRuC-ygy7ltw"}
+(exit 0)
+
+==============================================================
+Test 5: hernoemen op afstand
+==============================================================
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem upload -f create-new-revision -d merge -t /tmp/protonprobe.tNcl14/rename-me.txt /my-files/ProtonBackupProbe
+Transfer summary:
+  Uploaded: 1 items (12 B)
+(exit 0)
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem rename /my-files/ProtonBackupProbe/rename-me.txt hernoemd.txt
+{
+  uid: 'xxxx5fL-tGQRuC-ygy7ltw~HUi0GRRpsgnS8ApKLE7zCA',
+  parentUid: 'xxxx5fL-tGQRuC-ygy7ltw~f30ThkxxNCSEbIqcRWEMHA',
+  name: { ok: true, value: 'hernoemd.txt' },
+  keyAuthor: { ok: true, value: 'rinke.k@outlook.com' },
+  nameAuthor: { ok: true, value: 'rinke.k@outlook.com' },
+  directRole: 'admin',
+  membership: undefined,
+  ownedBy: { email: 'rinke.k@outlook.com' },
+  type: 'file',
+  mediaType: 'text/plain;charset=utf-8',
+  isShared: false,
+  isSharedByUrl: false,
+  creationTime: 2026-09-28T17:11:09.000Z,
+  modificationTime: 2026-09-28T17:11:09.000Z,
+  trashTime: undefined,
+  totalStorageSize: 90,
+  activeRevision: {
+    uid: 'xxxx5fL-tGQRuC-ygy7ltw~HUi0GRRpsgnS8ApKLE7zCA~KS7rfDaMsf-Fc2T6xIaPQQ',
+    state: 'active',
+    creationTime: 2026-09-28T17:11:09.000Z,
+    contentAuthor: { ok: true, value: 'rinke.k@outlook.com' },
+    storageSize: 90,
+    isImported: false,
+    claimedSize: 12,
+    claimedModificationTime: 2026-09-28T17:11:08.596Z,
+    claimedDigests: {
+      sha1: 'f02ead08c345b5291ab25be9823481089eb8d33d',
+      sha1Verified: false
+    },
+    claimedAdditionalMetadata: { Media: {} }
+  },
+  folder: undefined,
+  deprecatedShareId: undefined,
+  treeEventScopeId: 'xxxx5fL-tGQRuC-ygy7ltw',
+  errors: undefined
+}
+(exit 0)
+$ /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem list /my-files/ProtonBackupProbe -t file --json
+[
+{"uid":"xxxx5fL-tGQRuC-ygy7ltw~kvCcRCbtFe8l35__8bevPg","parentUid":"xxxx5fL-tGQRuC-ygy7ltw~f30ThkxxNCSEbIqcRWEMHA","name":{"ok":true,"value":"same.txt"},"keyAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"nameAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"directRole":"admin","ownedBy":{"email":"rinke.k@outlook.com"},"type":"file","mediaType":"text/plain;charset=utf-8","isShared":false,"isSharedByUrl":false,"creationTime":"2026-09-28T17:07:42.000Z","modificationTime":"2026-09-28T17:07:46.000Z","totalStorageSize":185,"activeRevision":{"uid":"xxxx5fL-tGQRuC-ygy7ltw~kvCcRCbtFe8l35__8bevPg~c8osiZr3a7MkxZKsPM8uLA","state":"active","creationTime":"2026-09-28T17:07:46.000Z","contentAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"storageSize":98,"isImported":false,"claimedSize":20,"claimedModificationTime":"2026-09-28T17:07:45.562Z","claimedDigests":{"sha1":"83171214c63fdc7b956868188b72885e1b27ae2d","sha1Verified":false},"claimedAdditionalMetadata":{"Media":{}}},"treeEventScopeId":"xxxx5fL-tGQRuC-ygy7ltw"},
+{"uid":"xxxx5fL-tGQRuC-ygy7ltw~HUi0GRRpsgnS8ApKLE7zCA","parentUid":"xxxx5fL-tGQRuC-ygy7ltw~f30ThkxxNCSEbIqcRWEMHA","name":{"ok":true,"value":"hernoemd.txt"},"keyAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"nameAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"directRole":"admin","ownedBy":{"email":"rinke.k@outlook.com"},"type":"file","mediaType":"text/plain;charset=utf-8","isShared":false,"isSharedByUrl":false,"creationTime":"2026-09-28T17:11:09.000Z","modificationTime":"2026-09-28T17:11:09.000Z","totalStorageSize":90,"activeRevision":{"uid":"xxxx5fL-tGQRuC-ygy7ltw~HUi0GRRpsgnS8ApKLE7zCA~KS7rfDaMsf-Fc2T6xIaPQQ","state":"active","creationTime":"2026-09-28T17:11:09.000Z","contentAuthor":{"ok":true,"value":"rinke.k@outlook.com"},"storageSize":90,"isImported":false,"claimedSize":12,"claimedModificationTime":"2026-09-28T17:11:08.596Z","claimedDigests":{"sha1":"f02ead08c345b5291ab25be9823481089eb8d33d","sha1Verified":false},"claimedAdditionalMetadata":{"Media":{}}},"treeEventScopeId":"xxxx5fL-tGQRuC-ygy7ltw"}
+]
+(exit 0)
+
+==============================================================
+Klaar
+==============================================================
+Rapport: /home/rinke/CloudDrive/Sources/Rider/ProtonDrive/probe/probe-report-20260928-190738.txt
+
+Test 4 (systemd + secret store) draai je apart met: ./probe/probe-systemd.sh
+Opruimen op Proton (verplaatst de testmap naar de prullenbak):
+  /home/rinke/.local/share/ProtonBackup/bin/proton-drive filesystem trash /my-files/ProtonBackupProbe
